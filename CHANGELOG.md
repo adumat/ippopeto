@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/adumat/ippopeto/compare/v0.3.0...v0.4.0) (2026-10-26)
+
+
+### Features
+
+* let the raft seat two to six hippos ([1bab369](https://github.com/adumat/ippopeto/commit/1bab369a8ca83106c53007726377f14631d1c656))
+
 ## [0.3.0](https://github.com/adumat/ippopeto/compare/v0.2.0...v0.3.0) (2026-10-26)
 
 
