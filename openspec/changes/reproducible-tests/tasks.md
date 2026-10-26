@@ -24,5 +24,5 @@
 
 ## 4. CI
 
-- [ ] 4.1 Add `.github/workflows/ci.yml` (push and pull_request; unit, then browser install and e2e; upload `test-results/` on failure). Verify the first run on GitHub is green
+- [x] 4.1 Add `.github/workflows/ci.yml` (push and pull_request; unit, then browser install and e2e; upload `test-results/` on failure). Verify the first run on GitHub is green
 - [x] 4.2 Add the test commands and the e2e approach to AGENTS.md. Verify a fresh reader can run both suites from it alone
