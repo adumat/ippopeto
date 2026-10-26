@@ -1,21 +1,21 @@
 'use strict';
 const Track = require('../public/track.js');
 
-// Costanti fisiche (unità: px, s)
+// Physics constants (units: px, s)
 const MASS = 4;
 const INERTIA = (MASS * (Track.RAFT_SIZE ** 2 * 2)) / 12;
 const FART_FORCE = 520;
-const LIN_DRAG = 1.1; // trascinamento rispetto all'acqua
+const LIN_DRAG = 1.1; // drag relative to the water
 const ANG_DRAG = 2.4;
 const AIM_SPEED = 2.6; // rad/s
 const GAS_MAX = 100;
-const GAS_DRAIN = 28; // al secondo mentre spinge
+const GAS_DRAIN = 28; // per second while pushing
 const GAS_REGEN = 16;
-const GAS_RECOVER = 35; // quando si svuota, deve risalire fin qui prima di ripartire
+const GAS_RECOVER = 35; // once empty, gas must refill to this before pushing again
 const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
 const COUNTDOWN = 3;
-const SNAPSHOT_EVERY = 3; // tick a 60 Hz -> snapshot a 20 Hz
+const SNAPSHOT_EVERY = 3; // 60 Hz ticks -> 20 Hz snapshots
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const r3 = (v) => Math.round(v * 1000) / 1000;
@@ -30,7 +30,7 @@ class Room {
     this.id = id;
     this.clients = new Map(); // id -> { id, ws, seat }
     this.seats = [null, null, null, null];
-    this.gt = 0; // tempo di gioco della stanza
+    this.gt = 0; // room game time
     this.tick = 0;
     this.status = 'lobby';
     this.countdown = 0;
@@ -76,7 +76,7 @@ class Room {
       return client.seat;
     }
     const idx = this.seats.findIndex((s) => s === null);
-    if (idx === -1) return null; // zattera piena: si guarda
+    if (idx === -1) return null; // raft full: spectate
     this.seats[idx] = {
       id: client.id,
       name: cleanName(name),
@@ -133,7 +133,7 @@ class Room {
     if (vn < 0) {
       R.vx -= (1 + RESTITUTION) * vn * nx;
       R.vy -= (1 + RESTITUTION) * vn * ny;
-      // un colpo di striscio fa girare la zattera
+      // a glancing hit spins the raft
       const vt = R.vx * -ny + R.vy * nx;
       R.w += vt * 0.004;
       this.bump(-vn);
@@ -155,7 +155,7 @@ class Room {
     const frozen = this.status === 'countdown';
     const R = this.raft;
 
-    // gas e mira
+    // gas and aim
     let active = 0, farting = 0;
     for (const s of this.seats) {
       if (!s) continue;
@@ -187,13 +187,13 @@ class Room {
       return;
     }
 
-    // spinte
+    // thrust
     const cos = Math.cos(R.a), sin = Math.sin(R.a);
     let fx = 0, fy = 0, torque = 0;
     const mult = this.sync ? SYNC_MULT : 1;
     this.seats.forEach((s, i) => {
       if (!s || !s.farting) return;
-      // il sedere punta verso aim, la spinta va dalla parte opposta
+      // the rear points along aim, thrust goes the opposite way
       const lfx = -Math.cos(s.aim) * FART_FORCE * mult;
       const lfy = -Math.sin(s.aim) * FART_FORCE * mult;
       const [lx, ly] = Track.SEATS[i];
@@ -204,7 +204,7 @@ class Room {
       torque += rx * wfy - ry * wfx;
     });
 
-    // acqua: corrente verso valle + mulinelli
+    // water: downstream current + whirlpools
     const c = Track.closest(R.x, R.y);
     let wx = -c.tx * c.flow, wy = -c.ty * c.flow;
     let spin = 0;
@@ -228,7 +228,7 @@ class Room {
     if (R.a > Math.PI) R.a -= 2 * Math.PI;
     if (R.a < -Math.PI) R.a += 2 * Math.PI;
 
-    // sponde
+    // banks
     const c2 = Track.closest(R.x, R.y);
     const limit = c2.hw - Track.RAFT_R;
     if (c2.dist > limit && c2.dist > 0) {
@@ -246,7 +246,7 @@ class Room {
       }
     }
 
-    // ostacoli
+    // obstacles
     for (const r of Track.ROCKS) this.collideCircle(r.x, r.y, r.r);
     for (const b of Track.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
     for (const cr of Track.crocsAt(this.gt)) {
@@ -258,7 +258,7 @@ class Room {
       }
     }
 
-    // checkpoint e arrivo
+    // checkpoints and finish
     if (this.status === 'running') {
       const s = Track.closest(R.x, R.y).s;
       const next = this.lastCp + 1;

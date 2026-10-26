@@ -8,10 +8,10 @@ const { Room } = require('./game');
 
 const PORT = Number(process.env.PORT || 8080);
 const MAX_ROOMS = Number(process.env.MAX_ROOMS || 50);
-const MAX_CLIENTS_PER_ROOM = 12; // 4 sulla zattera + spettatori
+const MAX_CLIENTS_PER_ROOM = 12; // 4 on the raft + spectators
 const STEP = 1 / 60;
 
-// File statici caricati in memoria all'avvio (niente accesso al filesystem a runtime)
+// Static files are loaded into memory at startup (no filesystem access at runtime)
 const PUBLIC = path.join(__dirname, '..', 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 const files = new Map();
@@ -119,7 +119,7 @@ function onConnection(ws, room) {
   ws.on('error', () => ws.terminate());
 }
 
-// Heartbeat: tiene vive le connessioni attraverso proxy e tunnel con timeout di inattività
+// Heartbeat: keeps connections alive through proxies and tunnels with idle timeouts
 setInterval(() => {
   for (const ws of wss.clients) {
     if (!ws.isAlive) {
@@ -131,21 +131,21 @@ setInterval(() => {
   }
 }, 20000).unref();
 
-// Loop di simulazione a passo fisso
+// Fixed-step simulation loop
 let last = process.hrtime.bigint();
 let acc = 0;
 setInterval(() => {
   const now = process.hrtime.bigint();
   acc += Number(now - last) / 1e9;
   last = now;
-  if (acc > 0.25) acc = 0.25; // dopo una pausa lunga non recuperiamo all'infinito
+  if (acc > 0.25) acc = 0.25; // after a long stall, do not catch up forever
   while (acc >= STEP) {
     for (const r of rooms.values()) if (r.clients.size > 0) r.step(STEP);
     acc -= STEP;
   }
 }, 1000 / 120);
 
-// Pulizia stanze vuote
+// Empty room cleanup
 setInterval(() => {
   const now = Date.now();
   for (const [id, r] of rooms) if (r.emptySince && now - r.emptySince > 120000) rooms.delete(id);

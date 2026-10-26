@@ -10,10 +10,10 @@
 
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch { /* niente */ } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
   };
 
-  // ---------- stanza ----------
+  // ---------- room ----------
   const NOUNS = ['bolla', 'nuvola', 'tromba', 'brezza', 'bufera', 'folata', 'raffica', 'nebbia'];
   const ADJS = ['pigra', 'felice', 'sonora', 'gentile', 'fiera', 'calda', 'furba', 'lenta'];
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -27,7 +27,7 @@
   $('room-name').textContent = roomId;
   $('name').value = store.get('ippo-name') || '';
 
-  // ---------- rete ----------
+  // ---------- network ----------
   let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false;
   const snaps = [];
   let offset = null, latest = null, lastStatus = null, best = [];
@@ -167,7 +167,7 @@
     return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
   };
 
-  // barre del gas
+  // gas bars
   const seatEls = COLORS.map((c, i) => {
     const el = document.createElement('div');
     el.className = 'seat empty';
@@ -179,7 +179,7 @@
     return el;
   });
 
-  // checkpoint sulla barra di avanzamento
+  // checkpoints on the progress bar
   for (const s of T.CHECKPOINTS) {
     const d = document.createElement('div');
     d.className = 'cp';
@@ -190,7 +190,7 @@
 
   let crewSig = '';
   function onSnapshot(m) {
-    // stato della partita
+    // game state
     if (m.st !== lastStatus) {
       if (m.st === 'countdown') $('results').hidden = true;
       lastStatus = m.st;
@@ -199,7 +199,7 @@
     $('lobby').hidden = !joined || inGame || m.st === 'finished';
     if (m.st === 'finished' && joined && $('results').hidden && !$('final-time').textContent) $('lobby').hidden = false;
 
-    // equipaggio
+    // crew
     const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1]] : 0))) + mySeat;
     if (sig !== crewSig) {
       crewSig = sig;
@@ -345,7 +345,7 @@
     n.stop(t + 0.2);
   }
 
-  // Il pezzo forte: un peto sintetizzato per posto, con timbro diverso
+  // The centrepiece: one synthesized fart per seat, each with its own timbre
   const FART_BASE = [82, 104, 66, 122];
   function startFart(i) {
     if (!audio || voices[i]) return;
@@ -400,7 +400,7 @@
     });
   }
 
-  // ---------- mondo precalcolato ----------
+  // ---------- precomputed world ----------
   const riverPath = new Path2D();
   const leftBank = new Path2D(), rightBank = new Path2D();
   T.PTS.forEach((p, i) => {
@@ -417,7 +417,7 @@
   }
   riverPath.closePath();
 
-  // cespugli sulle rive, per dare il senso del movimento
+  // bushes on the banks, to convey motion
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const bushes = [];
@@ -461,7 +461,7 @@
       if (snaps[i - 1].gt <= rg) {
         const a = snaps[i - 1], b = snaps[i];
         let f = (rg - a.gt) / Math.max(1e-6, b.gt - a.gt);
-        if (Math.hypot(b.r[0] - a.r[0], b.r[1] - a.r[1]) > 300) f = 1; // teletrasporto (morso)
+        if (Math.hypot(b.r[0] - a.r[0], b.r[1] - a.r[1]) > 300) f = 1; // teleport (bite)
         return { a, b, f, rg };
       }
     }
@@ -510,7 +510,7 @@
     const vw = cw / zoom / 2 + 120, vh = ch / zoom / 2 + 120;
     const inView = (x, y) => Math.abs(x - cam.x) < vw && Math.abs(y - cam.y) < vh;
 
-    // rive e acqua
+    // banks and water
     ctx.fillStyle = BUSH;
     for (const b of bushes) {
       if (!inView(b.x, b.y)) continue;
@@ -531,7 +531,7 @@
     ctx.stroke(leftBank);
     ctx.stroke(rightBank);
 
-    // corrente
+    // current
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -545,7 +545,7 @@
     }
     ctx.stroke();
 
-    // linee: partenza, checkpoint, arrivo
+    // lines: start, checkpoints, finish
     const cpDone = latest ? latest.cp : -1;
     const crossLine = (s, color, dash) => {
       const p = T.pointAt(s);
@@ -576,7 +576,7 @@
       }
     }
 
-    // mulinelli
+    // whirlpools
     for (const v of T.VORTICES) {
       if (!inView(v.x, v.y)) continue;
       ctx.fillStyle = 'rgba(31,43,46,0.12)';
@@ -592,7 +592,7 @@
         ctx.stroke();
       }
     }
-    // sassi
+    // rocks
     for (const r of T.ROCKS) {
       if (!inView(r.x, r.y)) continue;
       ctx.fillStyle = '#8d979b';
@@ -607,7 +607,7 @@
       ctx.arc(r.x - r.r * 0.3, r.y - r.r * 0.3, r.r * 0.35, 0, Math.PI * 2);
       ctx.fill();
     }
-    // barili
+    // barrels
     for (const b of T.barrelsAt(rg)) {
       if (!inView(b.x, b.y)) continue;
       ctx.fillStyle = WOOD;
@@ -627,13 +627,13 @@
       ctx.arc(b.x, b.y, b.r * 0.2, 0, Math.PI * 2);
       ctx.fill();
     }
-    // coccodrilli
+    // crocodiles
     for (const c of T.crocsAt(rg)) {
       if (!inView(c.x, c.y)) continue;
       drawCroc(c.x, c.y, c.r, Math.atan2(c.ny * c.dir, c.nx * c.dir), rg);
     }
 
-    // particelle di gas: sotto la zattera nascono, sopra si vedono
+    // gas particles: spawned below the raft, drawn above it
     const cos = Math.cos(raft.a), sin = Math.sin(raft.a);
     seats.forEach((s, i) => {
       if (!s || !s.farting) return;
@@ -673,7 +673,7 @@
     }
     ctx.globalAlpha = 1;
 
-    // nomi sopra gli ippopotami
+    // names above the hippos
     ctx.font = '700 17px "Atkinson Hyperlegible", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.lineWidth = 5;
@@ -687,7 +687,7 @@
       ctx.fillText(s.name, wx, wy - 34);
     });
 
-    // HUD a schermo
+    // on-screen HUD
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (st === 'countdown' && latest) {
       const n = Math.ceil(latest.tm);
@@ -723,10 +723,10 @@
     ctx.save();
     ctx.translate(raft.x, raft.y);
     ctx.rotate(raft.a);
-    // ombra
+    // shadow
     ctx.fillStyle = 'rgba(31,43,46,0.25)';
     ctx.fillRect(-h + 8, -h + 10, S, S);
-    // tronchi
+    // logs
     const n = 5, w = S / n;
     for (let i = 0; i < n; i++) {
       ctx.fillStyle = i % 2 ? WOOD : WOOD_DARK;
@@ -737,7 +737,7 @@
       ctx.fill();
       ctx.stroke();
     }
-    // corde
+    // ropes
     ctx.strokeStyle = SAND;
     ctx.lineWidth = 5;
     for (const y of [-h + 18, h - 18]) {
@@ -746,7 +746,7 @@
       ctx.lineTo(h, y);
       ctx.stroke();
     }
-    // prua
+    // bow
     ctx.fillStyle = PAPER;
     ctx.beginPath();
     ctx.moveTo(0, -h - 20);
@@ -775,7 +775,7 @@
     ctx.restore();
   }
 
-  // L'ippopotamo guarda dove spinge: il sedere punta verso aim, il muso dall'altra parte
+  // The hippo faces where it pushes: the rear points along aim, the snout the other way
   function drawHippo(s, color, isMe) {
     ctx.rotate(s.aim + Math.PI);
     ctx.scale(0.82, 0.82);
@@ -803,25 +803,25 @@
     ctx.globalAlpha = s.tired ? 0.65 : 1;
     ctx.strokeStyle = INK;
     ctx.lineWidth = 3.5;
-    // coda
+    // tail
     ctx.beginPath();
     ctx.moveTo(-26, 0);
     ctx.quadraticCurveTo(-36, 6, -34, -4);
     ctx.stroke();
-    // corpo
+    // body
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.ellipse(0, 0, 27, 20, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    // orecchie
+    // ears
     for (const y of [-11, 11]) {
       ctx.beginPath();
       ctx.arc(17, y, 6, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     }
-    // testa e muso
+    // head and snout
     ctx.beginPath();
     ctx.ellipse(26, 0, 15, 15, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -837,7 +837,7 @@
       ctx.arc(41, y, 2.4, 0, Math.PI * 2);
       ctx.fill();
     }
-    // occhi
+    // eyes
     for (const y of [-7, 7]) {
       ctx.fillStyle = '#fff';
       ctx.beginPath();
@@ -860,7 +860,7 @@
     ctx.strokeStyle = INK;
     ctx.lineWidth = 3.5;
     ctx.fillStyle = '#4f7d3c';
-    // coda
+    // tail
     ctx.save();
     ctx.translate(-r * 0.9, 0);
     ctx.rotate(wag);
@@ -872,17 +872,17 @@
     ctx.fill();
     ctx.stroke();
     ctx.restore();
-    // corpo
+    // body
     ctx.beginPath();
     ctx.ellipse(0, 0, r * 1.1, r * 0.55, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    // muso
+    // snout
     ctx.beginPath();
     ctx.roundRect(r * 0.6, -r * 0.32, r * 1.2, r * 0.64, r * 0.3);
     ctx.fill();
     ctx.stroke();
-    // denti
+    // teeth
     ctx.fillStyle = '#fff';
     for (let i = 0; i < 4; i++) {
       const px = r * 0.85 + i * r * 0.22;
@@ -894,7 +894,7 @@
         ctx.fill();
       }
     }
-    // occhi
+    // eyes
     for (const sgn of [-1, 1]) {
       ctx.fillStyle = '#ffd23f';
       ctx.beginPath();

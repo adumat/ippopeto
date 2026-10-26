@@ -1,9 +1,9 @@
-// Geometria del percorso, condivisa tra server (Node) e client (browser).
-// Il fiume va dal basso (partenza) verso l'alto (arrivo): y negativa = a monte.
+// Course geometry, shared by the server (Node) and the client (browser).
+// The river runs from the bottom (start) to the top (finish): negative y = upstream.
 (function (root) {
   'use strict';
 
-  // [x, y, mezza larghezza, velocità della corrente in px/s verso valle]
+  // [x, y, half-width, downstream current speed in px/s]
   const CONTROL = [
     [0, 300, 280, 0],
     [0, -300, 260, 30],
@@ -60,7 +60,7 @@
   const PTS = build();
   const LENGTH = PTS[PTS.length - 1].s;
 
-  // Punto sulla linea centrale alla distanza s. Normale (nx, ny) = lato destro.
+  // Point on the centre line at distance s. Normal (nx, ny) = right-hand side.
   function pointAt(s) {
     s = Math.max(0, Math.min(LENGTH, s));
     let lo = 0, hi = PTS.length - 1;
@@ -81,7 +81,7 @@
     };
   }
 
-  // Punto della linea centrale più vicino a (x, y).
+  // Centre-line point nearest to (x, y).
   function closest(x, y) {
     let best = null, bestD = Infinity;
     for (let i = 0; i < PTS.length - 1; i++) {
@@ -108,21 +108,21 @@
     };
   }
 
-  // Ostacoli: u = frazione del percorso, off = frazione della mezza larghezza (+ = destra)
+  // Obstacles: u = fraction of the course, off = fraction of the half-width (+ = right)
   const ROCK_DEF = [
     [0.07, -0.45, 38], [0.1, 0.5, 44], [0.155, -0.3, 42], [0.26, -0.42, 40], [0.285, 0.45, 36],
     [0.355, 0.35, 38], [0.47, 0.5, 40], [0.5, -0.5, 40], [0.615, 0.35, 40], [0.705, -0.46, 36],
     [0.725, 0.46, 36], [0.855, -0.3, 42], [0.9, -0.5, 38],
   ];
-  // barili alla deriva: [u, ampiezza, periodo s, raggio, fase]
+  // drifting barrels: [u, amplitude, period s, radius, phase]
   const BARREL_DEF = [
     [0.125, 0.6, 4.0, 30, 0], [0.33, 0.55, 3.5, 32, 1.0], [0.55, 0.6, 3.0, 30, 2.0], [0.785, 0.6, 3.2, 30, 0.5],
   ];
-  // mulinelli: [u, off, raggio, forza]
+  // whirlpools: [u, off, radius, strength]
   const VORTEX_DEF = [
     [0.215, 0.3, 150, 160], [0.575, -0.35, 140, 170], [0.83, 0.35, 150, 180],
   ];
-  // coccodrilli: [u, ampiezza, periodo s, raggio, fase]
+  // crocodiles: [u, amplitude, period s, radius, phase]
   const CROC_DEF = [
     [0.42, 0.55, 5.0, 34, 0], [0.67, 0.6, 4.5, 34, 1.5], [0.94, 0.5, 4.0, 34, 3.0],
   ];
@@ -146,7 +146,7 @@
       const w = (2 * Math.PI) / period;
       const off = amp * Math.sin(w * t + phase);
       const q = place(u, off);
-      // direzione di movimento (per disegnare i coccodrilli girati dalla parte giusta)
+      // direction of travel (so crocodiles are drawn facing the right way)
       const dir = Math.cos(w * t + phase) >= 0 ? 1 : -1;
       return { x: q.x, y: q.y, r, dir, nx: q.p.nx, ny: q.p.ny };
     });
@@ -166,7 +166,7 @@
     FINISH_S: LENGTH - 380,
     RAFT_SIZE: 120,
     RAFT_R: 72,
-    // posti degli ippopotami sulla zattera (coordinate locali, -y = prua)
+    // hippo seats on the raft (local coordinates, -y = bow)
     SEATS: [[-36, -36], [36, -36], [-36, 36], [36, 36]],
   };
 
