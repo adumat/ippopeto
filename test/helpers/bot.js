@@ -4,9 +4,10 @@
 // was calibrated against exactly this logic, so keep it unchanged.
 const { Room } = require('../../server/game.js');
 const T = require('../../public/track.js');
+const { seeded } = require('./rng.js');
 
-function runCrew({ players, smart = true, maxSeconds = 400 }) {
-  const room = new Room('bot');
+function runCrew({ players, smart = true, maxSeconds = 400, seed = 1 }) {
+  const room = new Room('bot', { random: seeded(seed) });
   const events = [];
   room.flush = function flush() {
     for (const e of this.events) if (e.k !== 'bump') events.push({ ...e, at: this.time });
@@ -63,6 +64,7 @@ function runCrew({ players, smart = true, maxSeconds = 400 }) {
     progress: s / T.LENGTH,
     bites: room.bites,
     sync: room.time > 0 ? room.syncTime / room.time : 0,
+    sharts: room.sharts,
     checkpoints: events.filter((e) => e.k === 'cp').map((e) => e.i),
     events,
   };

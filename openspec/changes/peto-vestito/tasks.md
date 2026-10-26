@@ -2,9 +2,9 @@
 
 ## 1. Server rule
 
-- [ ] 1.1 Add an injectable `random` to `Room` options and make the reference bot and existing unit tests pass a seeded generator. Verify `npm test` is green and gives identical output on two runs
-- [ ] 1.2 Implement the hazard in `step()`: on a peto vestito, empty and lock the tank, push `{k:'shart', i}`, and count it when `running`; add `sharts` to `finish`. Verify with unit tests: the measured rate over 2000 seeded full drains is 35 % ± 5, stopping at 15 gives under 5 %, and there are none during the countdown
-- [ ] 1.3 Re-run the difficulty check with the bot exposed to the risk. Verify four bots still finish within 300 s, or stop and retune with the owner
+- [x] 1.1 Add an injectable `random` to `Room` options and make the reference bot and existing unit tests pass a seeded generator. Verify `npm test` is green and gives identical output on two runs
+- [x] 1.2 Implement the hazard in `step()`: on a peto vestito, empty and lock the tank, push `{k:'shart', i}`, and count it when `running`; add `sharts` to `finish`. Verify with unit tests: the measured rate over 2000 seeded full drains is 35 % ± 5, stopping at 15 gives under 5 %, and there are none during the countdown
+- [x] 1.3 Re-run the difficulty check with the bot exposed to the risk. Verify four bots still finish within 300 s, or stop and retune with the owner
 
 ## 2. Client
 

@@ -15,6 +15,10 @@ const GAS_RECOVER = 35; // once empty, gas must refill to this before pushing ag
 const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
 const COUNTDOWN = 3;
+// Peto vestito: pushing below SHART_GAS risks soiling yourself at SHART_RATE per second
+// times (1 - gas/SHART_GAS)^2. Forcing a full drain to zero gives ~35 %, stopping at 15 ~3 %.
+const SHART_GAS = 25;
+const SHART_RATE = 1.45;
 const SNAPSHOT_EVERY = 3; // 60 Hz ticks -> 20 Hz snapshots
 const RESERVE_MS = Number(process.env.IPPO_RESERVE_MS || 15000);
 
@@ -27,9 +31,10 @@ function cleanName(raw) {
 }
 
 class Room {
-  constructor(id, { reserveMs = RESERVE_MS } = {}) {
+  constructor(id, { reserveMs = RESERVE_MS, random = Math.random } = {}) {
     this.id = id;
     this.reserveMs = reserveMs;
+    this.random = random;
     this.clients = new Map(); // id -> { id, ws, seat }
     this.seats = [null, null]; // Track.MIN_SEATS to Track.MAX_SEATS entries
     this.gt = 0; // room game time
@@ -50,6 +55,7 @@ class Room {
     this.bites = 0;
     this.time = 0;
     this.syncTime = 0;
+    this.sharts = 0;
     for (const s of this.seats) {
       if (!s) continue;
       s.gas = GAS_MAX;
@@ -234,7 +240,13 @@ class Room {
       if (s.aim > Math.PI) s.aim -= 2 * Math.PI;
       if (s.aim < -Math.PI) s.aim += 2 * Math.PI;
       const can = s.fartHeld && !s.away && !s.exhausted && s.gas > 0 && !frozen;
-      if (can) {
+      if (can && s.gas < SHART_GAS && this.random() < 1 - Math.exp(-SHART_RATE * (1 - s.gas / SHART_GAS) ** 2 * dt)) {
+        // peto vestito: the tank empties and locks exactly as when it runs dry
+        s.gas = 0;
+        s.exhausted = true;
+        this.events.push({ k: 'shart', i: this.seats.indexOf(s) });
+        if (this.status === 'running') this.sharts++;
+      } else if (can) {
         s.gas -= GAS_DRAIN * dt;
         if (s.gas <= 0) {
           s.gas = 0;
@@ -341,7 +353,7 @@ class Room {
       if (s >= Track.FINISH_S && this.lastCp === Track.CHECKPOINTS.length - 1) {
         this.status = 'finished';
         const crew = this.seats.filter(Boolean).map((x) => x.name).join(', ');
-        const entry = { crew, time: r1(this.time), bites: this.bites, sync: Math.round((100 * this.syncTime) / Math.max(this.time, 0.01)) };
+        const entry = { crew, time: r1(this.time), bites: this.bites, sharts: this.sharts, sync: Math.round((100 * this.syncTime) / Math.max(this.time, 0.01)) };
         this.best.push(entry);
         this.best.sort((a, b) => a.time - b.time);
         this.best = this.best.slice(0, 5);

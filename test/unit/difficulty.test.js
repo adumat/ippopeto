@@ -5,7 +5,7 @@ const { runCrew } = require('../helpers/bot.js');
 
 const fmt = (r) =>
   `status=${r.status} time=${r.time.toFixed(1)}s progress=${(100 * r.progress).toFixed(0)}% ` +
-  `bites=${r.bites} sync=${(100 * r.sync).toFixed(0)}% checkpoints=[${r.checkpoints}]`;
+  `bites=${r.bites} sharts=${r.sharts} sync=${(100 * r.sync).toFixed(0)}% checkpoints=[${r.checkpoints}]`;
 
 test('a crew of four reference bots finishes within 300 s', () => {
   const r = runCrew({ players: 4, maxSeconds: 310 });
