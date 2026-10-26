@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gas Comune</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦛</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bagel+Fat+One&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game" aria-label="Il fiume, la zattera e gli ippopotami"></canvas>
+
+  <div id="hud" hidden>
+    <div id="timer" aria-live="off">0:00.0</div>
+    <div id="toast" aria-live="polite"></div>
+    <div id="sync">Tutti insieme!</div>
+    <div id="progress" aria-hidden="true"><div id="progress-marker">🦛</div></div>
+    <div id="seats"></div>
+  </div>
+
+  <section id="splash" class="card">
+    <h1 class="title">Gas<br>Comune</h1>
+    <p class="lead">Una zattera, quattro ippopotami e un fiume controcorrente. Si avanza solo se si spinge insieme, e si spinge solo in un modo.</p>
+    <form id="join-form">
+      <label for="name">Come ti chiamano sulla zattera</label>
+      <div class="row">
+        <input id="name" name="name" maxlength="16" autocomplete="nickname" placeholder="Il tuo nome" required>
+        <button type="submit" class="btn primary">Sali a bordo</button>
+      </div>
+    </form>
+    <p class="room-line">Stanza <strong id="room-name"></strong>. Chi apre lo stesso link sale sulla stessa zattera.</p>
+  </section>
+
+  <aside id="lobby" class="card" hidden>
+    <h2>Equipaggio</h2>
+    <ol id="crew"></ol>
+    <div class="row">
+      <button id="copy-link" class="btn">Copia il link</button>
+      <button id="start" class="btn primary">Si parte</button>
+    </div>
+    <dl class="keys">
+      <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd>giri il sedere (anche con le frecce)</dd>
+      <dt><kbd>Spazio</kbd></dt><dd>spingi, finché c'è gas</dd>
+    </dl>
+    <p class="hint">Spingendo tutti nello stesso istante la spinta cresce. Un morso di coccodrillo vi riporta all'ultimo checkpoint. Intanto potete provare: la zattera è già in acqua.</p>
+  </aside>
+
+  <section id="results" class="card" hidden>
+    <h2>Arrivati</h2>
+    <p class="big-time" id="final-time"></p>
+    <p id="final-stats"></p>
+    <h3>Migliori tempi della stanza</h3>
+    <ol id="best"></ol>
+    <button id="again" class="btn primary">Un altro giro</button>
+  </section>
+
+  <div id="touch" hidden>
+    <button data-k="left" aria-label="Gira a sinistra">⟲</button>
+    <button data-k="fart" class="fart" aria-label="Spingi">💨</button>
+    <button data-k="right" aria-label="Gira a destra">⟳</button>
+  </div>
+
+  <button id="mute" class="icon-btn" aria-label="Audio on/off" title="Audio (M)">🔊</button>
+  <div id="conn" hidden>Connessione persa, riprovo…</div>
+
+  <script src="track.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
