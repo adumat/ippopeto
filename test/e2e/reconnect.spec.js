@@ -43,25 +43,25 @@ test('a seat whose player never returns is freed', async ({ page, baseURL }) => 
   const watcher = await WsBot.join(baseURL, room, 'Rita');
   sw.blocked = true;
   await sw.drop();
-  await watcher.waitFor((m) => m.t === 's' && m.s[0] && m.s[0][6] === 1);
-  await watcher.waitFor((m) => m.t === 's' && m.s[0] === null, 5000);
+  await watcher.waitFor((m) => m.t === 's' && m.s.some((x) => x && x[1] === 'Quinto' && x[6] === 1));
+  await watcher.waitFor((m) => m.t === 's' && !m.s.some((x) => x && x[1] === 'Quinto'), 5000);
   watcher.close();
 });
 
 test('a spectator who blips stays a spectator', async ({ page, baseURL }) => {
   const room = roomName('spec');
   const bots = [];
-  for (const c of 'efgh') bots.push(await WsBot.join(baseURL, room, `Bot ${c}`));
+  for (const c of 'efghij') bots.push(await WsBot.join(baseURL, room, `Bot ${c}`));
   const sw = await socketSwitch(page);
   const frames = recordFrames(page);
   await board(page, room, 'Sara');
   bots[0].close(); // no token: the seat frees at once
-  await bots[1].waitFor((m) => m.t === 's' && m.s[0] === null);
+  await bots[1].waitFor((m) => m.t === 's' && m.s.filter(Boolean).length === 5);
 
   await sw.drop();
   await expect.poll(() => frames.filter((m) => m.t === 'hello').length, { timeout: 5000 }).toBe(2);
   await page.waitForTimeout(500);
   expect(frames.filter((m) => m.t === 'joined').map((j) => j.seat)).toEqual([null]);
-  expect(bots[1].seats()[0]).toBeNull();
+  expect(bots[1].seats().filter(Boolean).length).toBe(5);
   for (const b of bots) b.close();
 });

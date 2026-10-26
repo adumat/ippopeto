@@ -1,6 +1,6 @@
 # Ippopeto 🦛💨
 
-A cooperative browser party game for 1–4 players, plus spectators. One raft, four hippos, a river to climb against the current. Each player is a hippo in one corner of the raft: turn your rear and push with gas. Push alone and the raft spins; push together and it goes straight, and with everyone in sync the thrust grows by 35%.
+A cooperative browser party game for 2–6 players, plus spectators. One raft, up to six hippos, a river to climb against the current. Each player is a hippo on the edge of the raft, which grows its crew from two to six seats as people sit down: turn your rear and push with gas. Push alone and the raft spins; push together and it goes straight, and with everyone in sync the thrust grows by 35%.
 
 The game is in Italian.
 
@@ -41,7 +41,7 @@ A refused WebSocket receives `{t:'denied', reason}` and a close code: `code` (40
 - `public/`: static canvas client, no build step. `track.js` is shared by server and browser, so geometry and moving obstacles match on both sides.
 - State lives in memory only: a restart ends running games, so run exactly one replica.
 
-Each client receives about 7 KB/s, so a full raft of four costs about 0.25 Mbit/s of upload.
+Each client receives about 7–8 KB/s, so a full raft of six costs about 0.4 Mbit/s of upload.
 
 ## Image
 

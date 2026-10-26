@@ -4,7 +4,7 @@ Guide for agents working on Ippopeto. Read it before changing anything.
 
 ## What this is
 
-A cooperative browser party game, built to play with colleagues on a call. 2–4 players push one shared raft upstream by turning their hippo's rear and pushing with gas. The fun is in coordinating.
+A cooperative browser party game, built to play with colleagues on a call. 2–6 players push one shared raft upstream by turning their hippo's rear and pushing with gas. The fun is in coordinating.
 
 - Repo `github.com/adumat/ippopeto` (public), image `ghcr.io/adumat/ippopeto`.
 - Deployed by the owner from their homelab GitOps repo (`kubernetes/apps/services/ippopeto` there). This repo holds no deployment manifests, and you do not deploy.
@@ -30,6 +30,8 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 
 ## Seats and screens
 
+- The raft has 2–6 seats: as many as people sitting, never fewer than 2. `Track.seatPositions(n)` places them evenly around the edge, symmetric about the bow, identically on server and client; the snapshot carries only the count. The list compacts outside a race and is frozen during one, so seat indices shift: find a player by id, never by index.
+- Thrust per hippo is `520 × √(4/N)`: total thrust grows with the square root of the crew, so 4 behave exactly as the original tuning.
 - A seat is free (`null`), taken, or **away**: its tab disconnected and has `IPPO_RESERVE_MS` (15 s) to come back. The seat is matched by a per-tab session token in sessionStorage, so a reload reclaims it too. An away hippo neither pushes nor counts for the sync bonus.
 - New seats are never given out during `countdown` or `running`. Spectators sit with "Siediti" between races.
 - Only a tab that was seated rejoins on reconnect.
@@ -40,7 +42,7 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 The look is settled; do not redesign it.
 
 - Tokens: ink `#1f2b2e`, water `#3fa7b8`, grass `#7fa347`, sand `#efdda8`, wood `#9c6b3d`, gas `#c6dc5a`, paper `#fff8e1`.
-- Player colours: `#ff9f1c`, `#e0479e`, `#ffd23f`, `#7b5cff`.
+- Player colours, in the order they are handed out: `#ff9f1c`, `#e0479e`, `#ffd23f`, `#7b5cff`, `#ef4b3f`, `#8fd3ff`. A colour belongs to the person, not to a seat.
 - Bagel Fat One for titles and numbers, Atkinson Hyperlegible for text.
 - "Sticker" cards (3 px ink border, solid offset shadow) and pill buttons. The gas-trail title is the only bold element.
 
@@ -69,7 +71,7 @@ Several tabs in the same room are several players. `PORT` and `MAX_ROOMS` are re
 ## Testing
 
 ```sh
-npm test               # unit: course gaps, centre line, four-bot difficulty, teleport
+npm test               # unit: course gaps, centre line, 2/4/6-bot difficulty, seats, teleport
 npx playwright install chromium   # once
 npm run e2e            # browsers: full race to the results card, access code, touch
 ```

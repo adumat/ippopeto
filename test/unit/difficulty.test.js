@@ -15,6 +15,15 @@ test('a crew of four reference bots finishes within 300 s', () => {
   assert.deepStrictEqual(r.checkpoints, [0, 1, 2, 3], fmt(r));
 });
 
-test('smaller crews are reported, not asserted', () => {
-  for (const players of [2, 1]) console.log(`  ${players} bot(s): ${fmt(runCrew({ players, maxSeconds: 300 }))}`);
+for (const players of [2, 6]) {
+  test(`a crew of ${players} reference bots finishes within 300 s`, () => {
+    const r = runCrew({ players, maxSeconds: 310 });
+    console.log(`  ${players} bots: ${fmt(r)}`);
+    assert.strictEqual(r.status, 'finished', fmt(r));
+    assert.ok(r.time <= 300, fmt(r));
+  });
+}
+
+test('a lone bot is reported, not asserted', () => {
+  console.log(`  1 bot: ${fmt(runCrew({ players: 1, maxSeconds: 300 }))}`);
 });

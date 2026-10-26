@@ -152,6 +152,22 @@
     });
   }
 
+  // n hippo seats evenly spaced around the raft, symmetric about the bow axis
+  // (local coordinates, -y = bow). n = 4 gives the corners, n = 2 the two sides.
+  const SEAT_RADIUS = 51;
+  const seatCache = new Map();
+  function seatPositions(n) {
+    if (!seatCache.has(n)) {
+      const pts = [];
+      for (let k = 0; k < n; k++) {
+        const a = -Math.PI / 2 + Math.PI / n + (2 * Math.PI * k) / n;
+        pts.push([SEAT_RADIUS * Math.cos(a), SEAT_RADIUS * Math.sin(a)]);
+      }
+      seatCache.set(n, pts);
+    }
+    return seatCache.get(n);
+  }
+
   const api = {
     PTS,
     LENGTH,
@@ -166,8 +182,9 @@
     FINISH_S: LENGTH - 380,
     RAFT_SIZE: 120,
     RAFT_R: 72,
-    // hippo seats on the raft (local coordinates, -y = bow)
-    SEATS: [[-36, -36], [36, -36], [-36, 36], [36, 36]],
+    MIN_SEATS: 2,
+    MAX_SEATS: 6,
+    seatPositions,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

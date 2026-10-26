@@ -240,6 +240,8 @@ kbd {
   #lobby { left: 8px; right: 8px; width: auto; max-width: none; top: calc(72px + env(safe-area-inset-top, 0px)); padding: 16px; }
   #lobby .keys, #lobby .hint { display: none; }
   .seat { width: 82px; font-size: 12px; padding: 4px 6px 6px; }
+  #seats.crowded { gap: 4px; }
+  #seats.crowded .seat { width: 58px; font-size: 11px; padding: 3px 4px 5px; border-width: 2px; }
   #seats { gap: 6px; }
   #timer { font-size: 30px; }
   #progress { top: 70px; }

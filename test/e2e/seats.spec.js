@@ -8,7 +8,7 @@ const tok = (c) => c.repeat(32);
 test('a spectator sits down once a seat frees up for good', async ({ page, baseURL }) => {
   const room = roomName('sit');
   const bots = [];
-  for (const c of 'abcd') bots.push(await WsBot.join(baseURL, room, `Bot ${c}`, { token: tok(c) }));
+  for (const c of 'abcdef') bots.push(await WsBot.join(baseURL, room, `Bot ${c}`, { token: tok(c) }));
   await board(page, room, 'Lia');
   await expect(page.locator('#start')).toBeDisabled();
   await expect(page.locator('#sit')).toBeHidden();

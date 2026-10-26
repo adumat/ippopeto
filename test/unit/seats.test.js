@@ -49,13 +49,14 @@ test('a held seat is freed after the reserve time', async () => {
   enter(room, TOKEN_B); // keeps the room stepping
   await new Promise((r) => setTimeout(r, 80));
   room.step(1 / 60);
-  assert.strictEqual(room.seats[0], null);
+  assert.strictEqual(room.seats.filter(Boolean).length, 1);
+  assert.ok(room.seats.every((x) => !x || !x.away));
 });
 
 test('a seat without a token is freed at once', () => {
   const room = mute(new Room('r'));
   room.removeClient(enter(room, null).c);
-  assert.strictEqual(room.seats[0], null);
+  assert.deepStrictEqual(room.seats, [null, null]);
 });
 
 test('no new seats during a race, but a held seat can be reclaimed', () => {
@@ -70,10 +71,58 @@ test('no new seats during a race, but a held seat can be reclaimed', () => {
   assert.deepStrictEqual(enter(room, TOKEN_A).res, { seat: 0 });
 });
 
-test('a full raft answers full', () => {
+test('the raft grows to six seats, then answers full', () => {
   const room = mute(new Room('r'));
-  for (let i = 0; i < 4; i++) enter(room, null);
+  assert.strictEqual(room.seats.length, 2);
+  for (let i = 1; i <= 6; i++) {
+    assert.notStrictEqual(enter(room, null).res.seat, null);
+    assert.strictEqual(room.seats.length, Math.max(2, i));
+  }
   assert.deepStrictEqual(enter(room, null).res, { seat: null, why: 'full' });
+  assert.deepStrictEqual(room.seats.map((x) => x.colour), [0, 1, 2, 3, 4, 5]);
+});
+
+test('a lone player gets a two-seat raft', () => {
+  const room = mute(new Room('r'));
+  enter(room, null);
+  assert.strictEqual(room.seats.length, 2);
+  assert.strictEqual(room.seats[1], null);
+});
+
+test('leaving the lobby shrinks the raft and everyone keeps their colour', () => {
+  const room = mute(new Room('r'));
+  const crew = [0, 1, 2, 3, 4].map(() => enter(room, null));
+  room.removeClient(crew[1].c);
+  assert.strictEqual(room.seats.length, 4);
+  assert.deepStrictEqual(room.seats.map((x) => x.colour), [0, 2, 3, 4]);
+  for (const { c } of [crew[0], crew[2], crew[3], crew[4]]) assert.strictEqual(room.seats[c.seat].id, c.id);
+  enter(room, null);
+  assert.deepStrictEqual(room.seats.map((x) => x.colour).sort(), [0, 1, 2, 3, 4]);
+});
+
+test('a seat freed mid-race stays empty until the finish', () => {
+  const room = mute(new Room('r'));
+  const crew = [0, 1, 2].map(() => enter(room, null));
+  room.start();
+  stepFor(room, 4);
+  room.removeClient(crew[1].c);
+  assert.strictEqual(room.seats.length, 3);
+  assert.strictEqual(room.seats[1], null);
+  room.status = 'finished';
+  room.compact();
+  assert.strictEqual(room.seats.length, 2);
+  assert.strictEqual(crew[2].c.seat, 1);
+});
+
+test('a reclaimed seat survives the raft shrinking around it', () => {
+  const room = mute(new Room('r', { reserveMs: 60000 }));
+  const a = enter(room, null), b = enter(room, TOKEN_B);
+  enter(room, null);
+  room.removeClient(b.c);
+  room.removeClient(a.c);
+  const back = enter(room, TOKEN_B);
+  assert.strictEqual(room.seats[back.res.seat].id, back.c.id);
+  assert.strictEqual(room.seats[back.res.seat].colour, 1);
 });
 
 test('joining again only renames', () => {

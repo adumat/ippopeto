@@ -1,7 +1,8 @@
 (() => {
   'use strict';
   const T = window.Track;
-  const COLORS = ['#ff9f1c', '#e0479e', '#ffd23f', '#7b5cff'];
+  // indexed by the colour a player keeps for as long as they are seated
+  const COLORS = ['#ff9f1c', '#e0479e', '#ffd23f', '#7b5cff', '#ef4b3f', '#8fd3ff'];
   const INK = '#1f2b2e', WATER = '#3fa7b8', GRASS = '#7fa347', BUSH = '#5f8a35', SAND = '#efdda8';
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
   const $ = (id) => document.getElementById(id);
@@ -29,7 +30,7 @@
   $('name').value = store.get('ippo-name') || '';
 
   // ---------- network ----------
-  let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false, denied = false;
+  let ws = null, myId = null, joined = false, myName = '', retry = 0, everConnected = false, denied = false;
   // wantSeat: this tab is seated or asking for a seat, so a reconnect must rejoin
   let wantSeat = false;
   // Per tab and surviving reloads: lets the server hand this tab its own seat back
@@ -63,7 +64,6 @@
       handle(m);
     };
     ws.onclose = (e) => {
-      mySeat = null;
       if (DENY_REASONS[e.code]) {
         showDenied(DENY_REASONS[e.code]);
         return;
@@ -98,7 +98,6 @@
       myId = m.id;
       best = m.best || [];
     } else if (m.t === 'joined') {
-      mySeat = m.seat;
       wantSeat = m.seat != null;
       if (m.why === 'racing') toast('La gara è in corso: guardi da riva fino all’arrivo', 3000);
       else if (m.seat == null) toast('La zattera è piena: guardi da riva', 3000);
@@ -213,17 +212,23 @@
     return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
   };
 
-  // gas bars
-  const seatEls = COLORS.map((c, i) => {
-    const el = document.createElement('div');
-    el.className = 'seat empty';
-    el.style.borderColor = INK;
-    el.innerHTML = `<span class="name"></span><span class="status">torna subito</span><div class="bar"><div class="fill"></div></div>`;
-    el.querySelector('.name').style.color = INK;
-    el.style.background = `linear-gradient(${c}, ${c}) left top / 8px 100% no-repeat, ${PAPER}`;
-    $('seats').appendChild(el);
-    return el;
-  });
+  // gas bars: one card per seat, rebuilt when the raft changes size
+  let seatEls = [];
+  function ensureSeatEls(n) {
+    if (seatEls.length === n) return;
+    $('seats').innerHTML = '';
+    $('seats').classList.toggle('crowded', n >= 5);
+    seatEls = Array.from({ length: n }, () => {
+      const el = document.createElement('div');
+      el.className = 'seat empty';
+      el.style.borderColor = INK;
+      el.innerHTML = `<span class="name"></span><span class="status">torna subito</span><div class="bar"><div class="fill"></div></div>`;
+      el.querySelector('.name').style.color = INK;
+      $('seats').appendChild(el);
+      return el;
+    });
+  }
+  const seatStripe = (c) => `linear-gradient(${c}, ${c}) left top / 8px 100% no-repeat, ${PAPER}`;
 
   // checkpoints on the progress bar
   for (const s of T.CHECKPOINTS) {
@@ -258,7 +263,8 @@
     }
 
     // crew
-    const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1], s[6]] : 0))) + mySeat;
+    const seated = m.s.some((s) => s && s[0] === myId);
+    const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1], s[6], s[7]] : 0))) + seated;
     if (sig !== crewSig) {
       crewSig = sig;
       const crew = $('crew');
@@ -267,15 +273,17 @@
         const li = document.createElement('li');
         const dot = document.createElement('span');
         dot.className = 'dot';
-        dot.style.background = COLORS[i];
+        dot.style.background = s ? COLORS[s[7]] : 'transparent';
         li.appendChild(dot);
         li.appendChild(document.createTextNode(s ? s[1] : 'Posto libero'));
         if (!s) li.className = 'empty';
         else if (s[0] === myId) li.className = 'me';
         crew.appendChild(li);
       });
-      $('start').disabled = mySeat == null;
+      $('start').disabled = !seated;
+      ensureSeatEls(m.s.length);
       m.s.forEach((s, i) => {
+        seatEls[i].style.background = seatStripe(s ? COLORS[s[7]] : PAPER);
         seatEls[i].classList.toggle('empty', !s);
         seatEls[i].classList.toggle('me', !!s && s[0] === myId);
         seatEls[i].classList.toggle('away', !!s && !!s[6]);
@@ -283,11 +291,11 @@
       });
     }
     m.s.forEach((s, i) => {
-      if (!s) return;
+      if (!s || !seatEls[i]) return;
       seatEls[i].querySelector('.fill').style.width = `${s[3]}%`;
       seatEls[i].classList.toggle('tired', !!s[5]);
     });
-    const canSit = joined && !wantSeat && mySeat == null && !racing(m.st) && m.s.some((x) => !x);
+    const canSit = joined && !wantSeat && !seated && !racing(m.st) && m.s.filter(Boolean).length < T.MAX_SEATS;
     $('sit').hidden = !canSit;
     $('sit-results').hidden = !canSit;
     $('solo-hint').hidden = m.s.filter(Boolean).length !== 1;
@@ -347,7 +355,7 @@
   let audio = null, master = null, noiseBuf = null;
   let muted = store.get('ippo-muted') === '1';
   $('mute').textContent = muted ? '🔇' : '🔊';
-  const voices = [null, null, null, null];
+  const voices = new Map(); // seat id -> playing voice
 
   function initAudio() {
     if (audio) return;
@@ -406,11 +414,11 @@
   }
 
   // The centrepiece: one synthesized fart per seat, each with its own timbre
-  const FART_BASE = [82, 104, 66, 122];
-  function startFart(i) {
-    if (!audio || voices[i]) return;
+  const FART_BASE = [82, 104, 66, 122, 92, 140]; // by colour
+  function startFart(id, colour) {
+    if (!audio || voices.has(id)) return;
     const t = audio.currentTime;
-    const base = FART_BASE[i] * (0.9 + Math.random() * 0.2);
+    const base = FART_BASE[colour] * (0.9 + Math.random() * 0.2);
     const osc = audio.createOscillator();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(base * 1.2, t);
@@ -441,23 +449,27 @@
     noise.connect(nG).connect(filt);
     filt.connect(amp).connect(master);
     [osc, lfo, noise, flut].forEach((n) => n.start(t));
-    voices[i] = { nodes: [osc, lfo, noise, flut], amp };
+    voices.set(id, { nodes: [osc, lfo, noise, flut], amp });
   }
-  function stopFart(i) {
-    const v = voices[i];
+  function stopFart(id) {
+    const v = voices.get(id);
     if (!v || !audio) return;
     const t = audio.currentTime;
     v.amp.gain.cancelScheduledValues(t);
     v.amp.gain.setValueAtTime(v.amp.gain.value, t);
     v.amp.gain.linearRampToValueAtTime(0, t + 0.09);
     v.nodes.forEach((n) => n.stop(t + 0.12));
-    voices[i] = null;
+    voices.delete(id);
   }
   function updateVoices(m) {
-    m.s.forEach((s, i) => {
-      if (s && s[4]) startFart(i);
-      else stopFart(i);
-    });
+    const pushing = new Set();
+    for (const s of m.s) {
+      if (s && s[4]) {
+        pushing.add(s[0]);
+        startFart(s[0], s[7]);
+      }
+    }
+    for (const id of [...voices.keys()]) if (!pushing.has(id)) stopFart(id);
   }
 
   // ---------- precomputed world ----------
@@ -536,7 +548,7 @@
     const rg = sm ? sm.rg : now;
 
     let raft = { x: startP.x, y: startP.y, a: Math.atan2(startP.tx, -startP.ty), vx: 0, vy: 0 };
-    let seats = [null, null, null, null];
+    let seats = [null, null];
     let st = 'lobby';
     if (sm) {
       const { a, b, f } = sm;
@@ -549,7 +561,7 @@
       seats = b.s.map((s, i) => {
         if (!s) return null;
         const pa = a.s[i] && a.s[i][0] === s[0] ? a.s[i][2] : s[2];
-        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6] };
+        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6], colour: s[7] };
       });
       st = b.st;
     }
@@ -695,9 +707,10 @@
 
     // gas particles: spawned below the raft, drawn above it
     const cos = Math.cos(raft.a), sin = Math.sin(raft.a);
+    const seatPos = T.seatPositions(seats.length);
     seats.forEach((s, i) => {
       if (!s || !s.farting) return;
-      const [lx, ly] = T.SEATS[i];
+      const [lx, ly] = seatPos[i];
       const bx = lx + Math.cos(s.aim) * 22, by = ly + Math.sin(s.aim) * 22;
       const wx = raft.x + bx * cos - by * sin, wy = raft.y + bx * sin + by * cos;
       const dx = Math.cos(s.aim + raft.a), dy = Math.sin(s.aim + raft.a);
@@ -734,17 +747,18 @@
     ctx.globalAlpha = 1;
 
     // names above the hippos
-    ctx.font = '700 17px "Atkinson Hyperlegible", system-ui, sans-serif';
+    ctx.font = `700 ${seats.length >= 5 ? 13 : 17}px "Atkinson Hyperlegible", system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.lineWidth = 5;
     seats.forEach((s, i) => {
       if (!s) return;
-      const [lx, ly] = T.SEATS[i];
+      const [lx, ly] = seatPos[i];
       const wx = raft.x + lx * cos - ly * sin, wy = raft.y + lx * sin + ly * cos;
       ctx.strokeStyle = INK;
       ctx.fillStyle = PAPER;
-      ctx.strokeText(s.name, wx, wy - 34);
-      ctx.fillText(s.name, wx, wy - 34);
+      const lift = seats.length >= 5 ? 26 : 34;
+      ctx.strokeText(s.name, wx, wy - lift);
+      ctx.fillText(s.name, wx, wy - lift);
     });
 
     // on-screen HUD
@@ -815,8 +829,10 @@
     ctx.closePath();
     ctx.fill();
 
+    const seatPos = T.seatPositions(seats.length);
+    const crowded = seats.length >= 5;
     seats.forEach((s, i) => {
-      const [lx, ly] = T.SEATS[i];
+      const [lx, ly] = seatPos[i];
       ctx.save();
       ctx.translate(lx, ly);
       if (!s) {
@@ -828,7 +844,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
       } else {
-        drawHippo(s, COLORS[i], s.id === myId);
+        drawHippo(s, COLORS[s.colour], s.id === myId, crowded);
       }
       ctx.restore();
     });
@@ -836,9 +852,10 @@
   }
 
   // The hippo faces where it pushes: the rear points along aim, the snout the other way
-  function drawHippo(s, color, isMe) {
+  function drawHippo(s, color, isMe, crowded) {
     ctx.rotate(s.aim + Math.PI);
-    ctx.scale(0.82, 0.82);
+    const k = crowded ? 0.68 : 0.82;
+    ctx.scale(k, k);
     if (isMe) {
       ctx.strokeStyle = PAPER;
       ctx.lineWidth = 5;
