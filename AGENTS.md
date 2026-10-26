@@ -28,6 +28,13 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 - **Bandwidth.** About 7 KB/s per client. A change to snapshot content or rate states its cost in bytes per second.
 - **Course rule.** Every solid obstacle leaves a gap of at least 164 px (raft diameter + 20) on one side. Re-verify after any course edit.
 
+## Seats and screens
+
+- A seat is free (`null`), taken, or **away**: its tab disconnected and has `IPPO_RESERVE_MS` (15 s) to come back. The seat is matched by a per-tab session token in sessionStorage, so a reload reclaims it too. An away hippo neither pushes nor counts for the sync bonus.
+- New seats are never given out during `countdown` or `running`. Spectators sit with "Siediti" between races.
+- Only a tab that was seated rejoins on reconnect.
+- The client shows exactly one of `splash | lobby | race | results`, switched only by `setView()`. Add new screens there, not with ad-hoc `hidden` toggles.
+
 ## Design rules
 
 The look is settled; do not redesign it.

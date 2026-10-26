@@ -24,4 +24,4 @@
 
 ## 5. Docs
 
-- [ ] 5.1 Update AGENTS.md (seat lifecycle, `IPPO_RESERVE_MS`) and the README environment section. Verify every variable the server reads is listed
+- [x] 5.1 Update AGENTS.md (seat lifecycle, `IPPO_RESERVE_MS`) and the README environment section. Verify every variable the server reads is listed

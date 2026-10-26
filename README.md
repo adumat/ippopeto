@@ -28,6 +28,7 @@ Several tabs in the same room are several players.
 | `PORT` | `8080` | HTTP and WebSocket port |
 | `MAX_ROOMS` | `50` | Concurrent rooms; bounds bandwidth |
 | `IPPO_ACCESS_CODE` | unset | When set, links must carry it as `?k=<code>`; unset means open |
+| `IPPO_RESERVE_MS` | `15000` | How long a disconnected player's seat waits for the same tab to come back |
 | `IPPO_DEBUG` | unset | `1` lets seated clients teleport the raft. **Tests only: never set it in production**, it lets any player skip to the finish |
 
 Endpoints: `/` (game), `/ws?room=…` (WebSocket), `/healthz`, `/stats` (rooms and connected players).
