@@ -59,6 +59,20 @@ Several tabs in the same room are several players. `PORT` and `MAX_ROOMS` are re
 
 ⚠️ When starting the server in the background from a script, save its PID and kill that PID. `pkill -f "server/index.js"` also matches the shell that launched it.
 
+## Testing
+
+```sh
+npm test               # unit: course gaps, centre line, four-bot difficulty, teleport
+npx playwright install chromium   # once
+npm run e2e            # browsers: full race to the results card, access code, touch
+```
+
+- Unit tests use `node --test` and need no dependencies. `test/helpers/bot.js` is the reference crew the ~120 s difficulty target was tuned against: do not change its steering.
+- `npm run e2e` starts its own server on port 8787 with `IPPO_DEBUG=1` and `IPPO_ACCESS_CODE=test`. Stop anything already on that port first.
+- To reach the finish, a test seats a Node WebSocket bot (`test/helpers/wsbot.js`) in the room. The bot starts the race and sends debug teleports, so the browser client carries no test hooks. Snapshots are read in the browser with Playwright's `page.on('websocket')`.
+- Wait on game state (snapshot `st`, events), never on fixed sleeps, except to prove that something does *not* happen.
+- CI (`.github/workflows/ci.yml`) runs both suites on every push and pull request, and keeps traces as artifacts on failure.
+
 ## Releasing
 
 Push conventional commits to `main`. release-please keeps a release PR open. Merging it tags `vX.Y.Z` and pushes the image tagged `X.Y.Z` and `latest` for amd64 and arm64. The owner then bumps the tag in the homelab.
