@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/adumat/ippopeto/compare/v0.5.0...v0.5.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* size the peto vestito splats by the view's area ([93ca479](https://github.com/adumat/ippopeto/commit/93ca479b33a3cd0d8113d56785d558dbae0fca21))
+
 ## [0.5.0](https://github.com/adumat/ippopeto/compare/v0.4.0...v0.5.0) (2026-10-26)
 
 
