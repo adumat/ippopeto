@@ -31,7 +31,7 @@
   // ---------- network ----------
   let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false, denied = false;
   const snaps = [];
-  let offset = null, latest = null, lastStatus = null, best = [];
+  let offset = null, latest = null, best = [];
 
   function connect() {
     const base = location.pathname.replace(/[^/]*$/, '');
@@ -156,9 +156,8 @@
     initAudio();
     send({ t: 'join', name: myName });
     $('name').blur();
-    $('splash').hidden = true;
-    $('hud').hidden = false;
     $('touch').hidden = !matchMedia('(pointer: coarse)').matches;
+    setView(latest && racing(latest.st) ? 'race' : 'lobby');
     if (latest) onSnapshot(latest);
   });
   $('start').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
@@ -212,16 +211,28 @@
   }
   const cpEls = [...document.querySelectorAll('#progress .cp')];
 
+  // What the screen shows: splash | lobby | race | results. Only setView() changes it.
+  let view = 'splash';
+  const racing = (st) => st === 'countdown' || st === 'running';
+  function setView(v) {
+    view = v;
+    if (denied) return;
+    $('splash').hidden = view !== 'splash';
+    $('hud').hidden = view === 'splash';
+    $('lobby').hidden = view !== 'lobby';
+    $('results').hidden = view !== 'results';
+  }
+
   let crewSig = '';
   function onSnapshot(m) {
-    // game state
-    if (m.st !== lastStatus) {
-      if (m.st === 'countdown') $('results').hidden = true;
-      lastStatus = m.st;
+    // game state; a finish event in this snapshot has already moved the view to results
+    if (view !== 'splash') {
+      if (racing(m.st)) {
+        if (view !== 'race') setView('race');
+      } else if (view === 'race') {
+        setView('lobby');
+      }
     }
-    const inGame = m.st === 'countdown' || m.st === 'running';
-    $('lobby').hidden = !joined || inGame || m.st === 'finished';
-    if (m.st === 'finished' && joined && $('results').hidden && !$('final-time').textContent) $('lobby').hidden = false;
 
     // crew
     const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1]] : 0))) + mySeat;
@@ -301,10 +312,7 @@
       li.appendChild(document.createTextNode(` ${b.crew}`));
       ol.appendChild(li);
     }
-    if (joined) {
-      $('results').hidden = false;
-      $('lobby').hidden = true;
-    }
+    if (view !== 'splash') setView('results');
   }
 
   // ---------- audio ----------

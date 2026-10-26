@@ -2,8 +2,8 @@
 
 ## 1. Client screen state
 
-- [ ] 1.1 Replace the visibility logic in `onSnapshot` and `showResults` with `view` + `render()` per the design's transition table, and remove the `final-time` hack. Verify `race.spec` and `touch.spec` still pass with no behaviour change
-- [ ] 1.2 Add an e2e case: a browser boards a room whose race has just finished (teleported by the bot) and sees the lobby, not the results. Verify it fails before 1.1 and passes after
+- [x] 1.1 Replace the visibility logic in `onSnapshot` and `showResults` with `view` + `render()` per the design's transition table, and remove the `final-time` hack. Verify `race.spec` and `touch.spec` still pass with no behaviour change
+- [x] 1.2 Add an e2e case: a browser boards a room whose race has just finished (teleported by the bot) and sees the lobby, not the results. Verify it fails before 1.1 and passes after
 
 ## 2. Seat lifecycle on the server
 
