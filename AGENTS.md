@@ -51,6 +51,13 @@ UI copy is Italian:
 - no all-caps labels, no middle-dot separators, no arrows in buttons;
 - typographic apostrophe (’).
 
+## Sounds
+
+- Fart voices are recordings in `public/sounds/` (`fart-NN.mp3`, `vestito-NN.mp3`), mono mp3, loudness-normalized. Keep the folder under 500 KB: every client downloads it once per page load.
+- Any recording added must allow redistribution in a public repo, and gets a row in `CREDITS.md`. The current set is CC0 from Freesound.
+- Every other sound is synthesized in the browser and stays that way.
+- Web Audio on iOS needs the unlock in `client.js` (completed tap, playback audio session, silent loop). Do not start audio from `pointerdown` alone.
+
 ## Conventions
 
 - Code comments, docs and specs in English. UI copy in Italian.

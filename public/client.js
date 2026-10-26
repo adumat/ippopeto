@@ -370,7 +370,38 @@
     noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    loadClips(FART_CLIPS).then((b) => { fartBufs = b; });
+    loadClips(VESTITO_CLIPS).then((b) => { vestitoBufs = b; });
   }
+
+  // iOS keeps Web Audio silent behind the mute switch and only unlocks it on a
+  // completed tap (touchend or click), never on touchstart or pointerdown.
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* older Safari */ }
+  let keepAlive = null;
+  function silentWavUrl() {
+    const n = 4410, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, str) => [...str].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 44100, true); v.setUint32(28, 88200, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function unlockAudio() {
+    initAudio();
+    if (!audio) return;
+    if (audio.state !== 'running') audio.resume().catch(() => {});
+    const src = audio.createBufferSource();
+    src.buffer = audio.createBuffer(1, 1, 22050);
+    src.connect(audio.destination);
+    src.start(0);
+    if (!keepAlive) {
+      // a looping silent media element moves older iOS into the playback category
+      keepAlive = new Audio(silentWavUrl());
+      keepAlive.loop = true;
+      keepAlive.play().catch(() => {});
+    }
+  }
+  for (const ev of ['touchend', 'click', 'keydown']) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
   function toggleMute() {
     muted = !muted;
     store.set('ippo-muted', muted ? '1' : '0');
@@ -413,53 +444,62 @@
     n.stop(t + 0.2);
   }
 
-  // The centrepiece: one synthesized fart per seat, each with its own timbre
-  const FART_BASE = [82, 104, 66, 122, 92, 140]; // by colour
+  // Fart voices are real recordings: each push chains random clips, with speed and
+  // pitch varied per clip around the seat colour's own rate, so no two pushes match.
+  const FART_CLIPS = Array.from({ length: 12 }, (_, i) => `sounds/fart-${String(i + 1).padStart(2, '0')}.mp3`);
+  const VESTITO_CLIPS = Array.from({ length: 5 }, (_, i) => `sounds/vestito-${String(i + 1).padStart(2, '0')}.mp3`);
+  const SEAT_RATE = [1.0, 1.15, 0.88, 1.3, 0.95, 1.22]; // by colour
+  let fartBufs = [], vestitoBufs = [];
+  function loadClips(urls) {
+    return Promise.all(urls.map((u) => fetch(u)
+      .then((r) => r.arrayBuffer())
+      .then((b) => new Promise((ok, ko) => audio.decodeAudioData(b, ok, ko)))
+      .catch(() => null)))
+      .then((bufs) => bufs.filter(Boolean));
+  }
+  function playClip(buf, rate, at, out) {
+    const src = audio.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    src.connect(out);
+    src.start(Math.max(at, audio.currentTime));
+    return src;
+  }
   function startFart(id, colour) {
-    if (!audio || voices.has(id)) return;
-    const t = audio.currentTime;
-    const base = FART_BASE[colour] * (0.9 + Math.random() * 0.2);
-    const osc = audio.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(base * 1.2, t);
-    osc.frequency.exponentialRampToValueAtTime(base * 0.75, t + 2.5);
-    const lfo = audio.createOscillator();
-    lfo.frequency.value = 16 + Math.random() * 16;
-    const lfoG = audio.createGain();
-    lfoG.gain.value = base * 0.4;
-    lfo.connect(lfoG).connect(osc.frequency);
-    const noise = audio.createBufferSource();
-    noise.buffer = noiseBuf;
-    noise.loop = true;
-    const nG = audio.createGain();
-    nG.gain.value = 0.35;
-    const filt = audio.createBiquadFilter();
-    filt.type = 'lowpass';
-    filt.frequency.value = 380 + Math.random() * 120;
-    filt.Q.value = 7;
-    const amp = audio.createGain();
-    amp.gain.setValueAtTime(0, t);
-    amp.gain.linearRampToValueAtTime(0.16, t + 0.03);
-    const flut = audio.createOscillator();
-    flut.frequency.value = 7 + Math.random() * 7;
-    const flutG = audio.createGain();
-    flutG.gain.value = 0.05;
-    flut.connect(flutG).connect(amp.gain);
-    osc.connect(filt);
-    noise.connect(nG).connect(filt);
-    filt.connect(amp).connect(master);
-    [osc, lfo, noise, flut].forEach((n) => n.start(t));
-    voices.set(id, { nodes: [osc, lfo, noise, flut], amp });
+    if (!audio || voices.has(id) || !fartBufs.length) return;
+    const bus = audio.createGain();
+    bus.connect(master);
+    const v = { bus, sources: [], timer: null, live: true };
+    voices.set(id, v);
+    let at = audio.currentTime;
+    const next = () => {
+      if (!v.live) return;
+      const rate = (SEAT_RATE[colour] || 1) * (0.88 + Math.random() * 0.24);
+      const src = playClip(pick(fartBufs), rate, at, bus);
+      v.sources.push(src);
+      if (v.sources.length > 4) v.sources.shift();
+      at = Math.max(at, audio.currentTime) + src.buffer.duration / rate - 0.03;
+      v.timer = setTimeout(next, Math.max(0, (at - audio.currentTime) * 1000 - 150));
+    };
+    next();
   }
   function stopFart(id) {
     const v = voices.get(id);
     if (!v || !audio) return;
-    const t = audio.currentTime;
-    v.amp.gain.cancelScheduledValues(t);
-    v.amp.gain.setValueAtTime(v.amp.gain.value, t);
-    v.amp.gain.linearRampToValueAtTime(0, t + 0.09);
-    v.nodes.forEach((n) => n.stop(t + 0.12));
     voices.delete(id);
+    v.live = false;
+    clearTimeout(v.timer);
+    const t = audio.currentTime;
+    v.bus.gain.setValueAtTime(1, t);
+    v.bus.gain.linearRampToValueAtTime(0, t + 0.06);
+    for (const src of v.sources) {
+      try { src.stop(t + 0.08); } catch { /* already ended */ }
+    }
+    setTimeout(() => v.bus.disconnect(), 250);
+  }
+  function playVestito(colour) {
+    if (!audio || !vestitoBufs.length) return;
+    playClip(pick(vestitoBufs), (SEAT_RATE[colour] || 1) * (0.9 + Math.random() * 0.2), 0, master);
   }
   function updateVoices(m) {
     const pushing = new Set();

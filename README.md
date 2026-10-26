@@ -43,6 +43,10 @@ A refused WebSocket receives `{t:'denied', reason}` and a close code: `code` (40
 
 Each client receives about 7–8 KB/s, so a full raft of six costs about 0.4 Mbit/s of upload.
 
+## Sounds
+
+The farts are real recordings: twelve clips for pushing and five for the peto vestito, in `public/sounds/`, all CC0 from Freesound and listed in [CREDITS.md](CREDITS.md). Each push chains random clips at a varied speed and pitch around the seat's own, so it never sounds the same twice. Every other sound is synthesized in the browser.
+
 ## Image
 
 `ghcr.io/adumat/ippopeto`, built for amd64 and arm64 on every release. Releases are cut by [release-please](https://github.com/googleapis/release-please) from conventional commits. The container runs as uid 1000 on port 8080 and works with a read-only root filesystem. When it sits behind a proxy or tunnel with an idle timeout, the server's 20 s WebSocket ping keeps connections open.
