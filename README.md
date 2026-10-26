@@ -27,8 +27,11 @@ Several tabs in the same room are several players.
 |---|---|---|
 | `PORT` | `8080` | HTTP and WebSocket port |
 | `MAX_ROOMS` | `50` | Concurrent rooms; bounds bandwidth |
+| `IPPO_ACCESS_CODE` | unset | When set, links must carry it as `?k=<code>`; unset means open |
 
 Endpoints: `/` (game), `/ws?room=…` (WebSocket), `/healthz`, `/stats` (rooms and connected players).
+
+A refused WebSocket receives `{t:'denied', reason}` and a close code: `code` (4001, wrong or missing access code), `room-full` (4002, 12 people already in the room), `server-full` (4003, `MAX_ROOMS` reached). The browser shows the reason and stops retrying.
 
 ## Architecture
 

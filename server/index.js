@@ -11,6 +11,14 @@ const MAX_ROOMS = Number(process.env.MAX_ROOMS || 50);
 const MAX_CLIENTS_PER_ROOM = 12; // 4 on the raft + spectators
 const STEP = 1 / 60;
 
+const digest = (v) => crypto.createHash('sha256').update(String(v)).digest();
+const ACCESS_DIGEST = process.env.IPPO_ACCESS_CODE ? digest(process.env.IPPO_ACCESS_CODE) : null;
+// Comparing fixed-length digests keeps the check constant-time and hides the code's length
+function codeMatches(k) {
+  return !ACCESS_DIGEST || crypto.timingSafeEqual(digest(k ?? ''), ACCESS_DIGEST);
+}
+const DENY_CLOSE = { code: 4001, 'room-full': 4002, 'server-full': 4003 };
+
 // Static files are loaded into memory at startup (no filesystem access at runtime)
 const PUBLIC = path.join(__dirname, '..', 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
@@ -64,18 +72,22 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy();
     return;
   }
+  let reason = null;
   let room = rooms.get(roomId);
+  if (!codeMatches(url.searchParams.get('k'))) reason = 'code';
+  else if (!room && rooms.size >= MAX_ROOMS) reason = 'server-full';
+  else if (room && room.clients.size >= MAX_CLIENTS_PER_ROOM) reason = 'room-full';
+  if (reason) {
+    // A browser cannot read the status of a failed handshake, so refusals go through an open socket
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      ws.send(JSON.stringify({ t: 'denied', reason }));
+      ws.close(DENY_CLOSE[reason], reason);
+    });
+    return;
+  }
   if (!room) {
-    if (rooms.size >= MAX_ROOMS) {
-      socket.destroy();
-      return;
-    }
     room = new Room(roomId);
     rooms.set(roomId, room);
-  }
-  if (room.clients.size >= MAX_CLIENTS_PER_ROOM) {
-    socket.destroy();
-    return;
   }
   wss.handleUpgrade(req, socket, head, (ws) => onConnection(ws, room));
 });

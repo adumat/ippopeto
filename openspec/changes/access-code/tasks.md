@@ -2,9 +2,9 @@
 
 ## 1. Server admission
 
-- [ ] 1.1 Read `IPPO_ACCESS_CODE` at startup, and add a `codeMatches(k)` that compares SHA-256 digests with `crypto.timingSafeEqual` and returns true when no code is set. Verify with a `node -e` check covering an unset code, the right code, a wrong code and a different-length code
-- [ ] 1.2 Restructure the upgrade handler. Path and room-id failures still `destroy()`. Code, `server-full` and `room-full` refusals go through `handleUpgrade`, send `{t:'denied', reason}` and close with 4001, 4003 or 4002. Create the room only after all checks pass. Verify with `npx wscat` (or a `ws` one-liner): a wrong code gets the frame and close code 4001, and `/stats` shows no new room
-- [ ] 1.3 Document `IPPO_ACCESS_CODE` and the refusal reasons in the README's environment section. Verify the README lists every variable the server reads
+- [x] 1.1 Read `IPPO_ACCESS_CODE` at startup, and add a `codeMatches(k)` that compares SHA-256 digests with `crypto.timingSafeEqual` and returns true when no code is set. Verify with a `node -e` check covering an unset code, the right code, a wrong code and a different-length code
+- [x] 1.2 Restructure the upgrade handler. Path and room-id failures still `destroy()`. Code, `server-full` and `room-full` refusals go through `handleUpgrade`, send `{t:'denied', reason}` and close with 4001, 4003 or 4002. Create the room only after all checks pass. Verify with `npx wscat` (or a `ws` one-liner): a wrong code gets the frame and close code 4001, and `/stats` shows no new room
+- [x] 1.3 Document `IPPO_ACCESS_CODE` and the refusal reasons in the README's environment section. Verify the README lists every variable the server reads
 
 ## 2. Client
 
