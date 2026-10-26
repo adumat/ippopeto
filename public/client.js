@@ -614,14 +614,15 @@
         const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * 1.1;
         return { x: Math.cos(a) * d, y: Math.sin(a) * d, r: 0.07 + Math.random() * 0.13 };
       });
-      splats.push({ x, y, r: 0.08 + Math.random() * 0.07, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
+      splats.push({ x, y, r: 0.1 + Math.random() * 0.08, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
     }
     splats = splats.slice(-10);
   }
   function drawSplats() {
     const now = performance.now() / 1000;
     splats = splats.filter((sp) => now - sp.born < SPLAT_HOLD + SPLAT_DRIP);
-    const unit = Math.min(cw, ch);
+    // sized by the view's area, so a tall phone gets splats as big, relative to its screen, as a desktop
+    const unit = Math.sqrt(cw * ch);
     for (const sp of splats) {
       const age = now - sp.born;
       if (age < 0) continue;
