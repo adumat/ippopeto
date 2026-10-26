@@ -15,12 +15,12 @@
 
 ## 3. Browser suite
 
-- [ ] 3.1 Add `@playwright/test` (exact version) and `playwright.config.js`, with webServer on port 8787, `IPPO_DEBUG=1`, `IPPO_ACCESS_CODE=test`, Chromium only and traces on failure. Add `"e2e": "playwright test"`. Verify `npm run e2e` starts and stops the server on its own
-- [ ] 3.2 Write `test/helpers/wsbot.js`: a Node `ws` client that joins a room as a seated player and can send `start` and teleports. Verify it is used by `race.spec`
-- [ ] 3.3 Write `test/e2e/race.spec.js`: two browsers and the bot go through board, lobby, start, countdown and race, then teleports to the finish. Check the results card (time, bites line, sync line, at least one best time), then "Un altro giro", which hides the results and shows a countdown snapshot. Collect console errors and page errors and assert there are none. Verify it passes three times in a row
-- [ ] 3.4 Write `test/e2e/access.spec.js`: a wrong `k` shows the refusal card and opens no second socket within 3 s; the right `k` reaches the splash. Verify it passes
-- [ ] 3.5 Write `test/e2e/touch.spec.js` with a 390×844 `hasTouch`/`isMobile` context: the touch bar is visible after boarding; pressing left or right changes the player's own `aim` and holding push sets `farting` in received snapshots; the boxes of `#lobby` and `#mute` do not intersect. Verify it passes
-- [ ] 3.6 Delete `scripts/e2e_desktop.py`, `scripts/e2e_mobile.py` and the then-empty `scripts/`, and add `test-results/` and `playwright-report/` to `.gitignore`. Verify `git status` is clean after a run
+- [x] 3.1 Add `@playwright/test` (exact version) and `playwright.config.js`, with webServer on port 8787, `IPPO_DEBUG=1`, `IPPO_ACCESS_CODE=test`, Chromium only and traces on failure. Add `"e2e": "playwright test"`. Verify `npm run e2e` starts and stops the server on its own
+- [x] 3.2 Write `test/helpers/wsbot.js`: a Node `ws` client that joins a room as a seated player and can send `start` and teleports. Verify it is used by `race.spec`
+- [x] 3.3 Write `test/e2e/race.spec.js`: two browsers and the bot go through board, lobby, start, countdown and race, then teleports to the finish. Check the results card (time, bites line, sync line, at least one best time), then "Un altro giro", which hides the results and shows a countdown snapshot. Collect console errors and page errors and assert there are none. Verify it passes three times in a row
+- [x] 3.4 Write `test/e2e/access.spec.js`: a wrong `k` shows the refusal card and opens no second socket within 3 s; the right `k` reaches the splash. Verify it passes
+- [x] 3.5 Write `test/e2e/touch.spec.js` with a 390×844 `hasTouch`/`isMobile` context: the touch bar is visible after boarding; pressing left or right changes the player's own `aim` and holding push sets `farting` in received snapshots; the boxes of `#lobby` and `#mute` do not intersect. Verify it passes
+- [x] 3.6 Delete `scripts/e2e_desktop.py`, `scripts/e2e_mobile.py` and the then-empty `scripts/`, and add `test-results/` and `playwright-report/` to `.gitignore`. Verify `git status` is clean after a run
 
 ## 4. CI
 
