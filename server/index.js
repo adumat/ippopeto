@@ -28,6 +28,9 @@ for (const f of fs.readdirSync(PUBLIC)) {
   const ext = path.extname(f);
   if (TYPES[ext]) files.set('/' + f, { body: fs.readFileSync(path.join(PUBLIC, f)), type: TYPES[ext] });
 }
+for (const f of fs.readdirSync(path.join(PUBLIC, 'sounds'))) {
+  if (path.extname(f) === '.mp3') files.set('/sounds/' + f, { body: fs.readFileSync(path.join(PUBLIC, 'sounds', f)), type: 'audio/mpeg' });
+}
 files.set('/', files.get('/index.html'));
 
 const rooms = new Map();

@@ -2,11 +2,11 @@
 
 ## 1. Assets
 
-- [ ] 1.1 Copy the 12 chosen clips to `public/sounds/fart-01.mp3` … `fart-12.mp3` and the 5 vestito clips to `vestito-01.mp3` … `vestito-05.mp3`, and write `CREDITS.md` with each file's Freesound id, title, author and CC0 licence link. Verify `du -ch public/sounds/*.mp3` stays under 500 KB and every file is listed
+- [x] 1.1 Copy the 12 chosen clips to `public/sounds/fart-01.mp3` … `fart-12.mp3` and the 5 vestito clips to `vestito-01.mp3` … `vestito-05.mp3`, and write `CREDITS.md` with each file's Freesound id, title, author and CC0 licence link. Verify `du -ch public/sounds/*.mp3` stays under 500 KB and every file is listed
 
 ## 2. Server
 
-- [ ] 2.1 Load `public/sounds/*.mp3` into memory at startup and serve it at `/sounds/<name>` as `audio/mpeg`. Verify with `curl -sI /sounds/fart-01.mp3` shows 200 and `audio/mpeg`, and `/sounds/../server/index.js` is 404
+- [x] 2.1 Load `public/sounds/*.mp3` into memory at startup and serve it at `/sounds/<name>` as `audio/mpeg`. Verify with `curl -sI /sounds/fart-01.mp3` shows 200 and `audio/mpeg`, and `/sounds/../server/index.js` is 404
 
 ## 3. Client
 
