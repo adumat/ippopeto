@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0](https://github.com/adumat/ippopeto/compare/v0.4.0...v0.5.0) (2026-10-26)
+
+
+### Features
+
+* bundle real fart recordings and serve them ([44cc066](https://github.com/adumat/ippopeto/commit/44cc066a85d9b5a013fb37d693303474ca74d5ee))
+* play real fart recordings, varied on every push ([8092765](https://github.com/adumat/ippopeto/commit/8092765c941ef7c47bcd524792402d3e511de2cd))
+* risk a peto vestito when forcing an empty tank ([3fed294](https://github.com/adumat/ippopeto/commit/3fed29458ac282d45f6d31ccf8281bb949ba0196))
+* show the peto vestito to everyone ([2db6683](https://github.com/adumat/ippopeto/commit/2db66839579713fb5014241f7789e313bc60fd34))
+
+
+### Bug Fixes
+
+* make the peto vestito splats bigger ([3b47fd4](https://github.com/adumat/ippopeto/commit/3b47fd4a55c91610ac9e55ce1e326ad405fff404))
+
 ## [0.4.0](https://github.com/adumat/ippopeto/compare/v0.3.0...v0.4.0) (2026-10-26)
 
 
