@@ -16,13 +16,15 @@ The image SHALL be built in two stages on `node:22-alpine`, with production depe
 
 ### Requirement: Image pipeline
 
-GitHub Actions SHALL build `ghcr.io/adumat/ippopeto` for amd64 and arm64:
-- on every push to `main`, tagged `sha-<short>` and `latest`;
-- on every `v*` tag, also tagged with the semver version.
+GitHub Actions SHALL build `ghcr.io/adumat/ippopeto` for amd64 and arm64 only when a release is created. Releases SHALL be managed by release-please from conventional commits on `main`: merging its release PR SHALL create the tag `vX.Y.Z` and push the image tagged `X.Y.Z` and `latest`. Pushes to `main` that do not create a release SHALL NOT push an image.
 
 #### Scenario: Release tag
-- **WHEN** `v0.2.0` is pushed
-- **THEN** `ghcr.io/adumat/ippopeto:0.2.0` exists for both architectures
+- **WHEN** the release PR for `0.2.0` is merged
+- **THEN** the tag `v0.2.0` exists and `ghcr.io/adumat/ippopeto:0.2.0` exists for both architectures
+
+#### Scenario: Ordinary push
+- **WHEN** a `fix:` commit is pushed to `main`
+- **THEN** release-please updates its release PR and no image is pushed
 
 ### Requirement: Bandwidth budget
 
@@ -31,3 +33,11 @@ Each client SHALL receive about 7 KB/s, so a full raft of four costs about 0.25 
 #### Scenario: New snapshot field
 - **WHEN** a change adds a per-seat field to the snapshot
 - **THEN** its design states the added bytes per second
+
+### Requirement: Public image
+
+The image SHALL be pullable without credentials, so a cluster needs no pull secret.
+
+#### Scenario: Anonymous pull
+- **WHEN** `docker pull ghcr.io/adumat/ippopeto:<version>` runs without login
+- **THEN** the pull succeeds

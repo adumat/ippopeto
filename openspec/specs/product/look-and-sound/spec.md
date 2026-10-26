@@ -61,3 +61,19 @@ All sound SHALL be synthesized in the browser, with no audio files:
 #### Scenario: Muted player
 - **WHEN** a player muted the game last time
 - **THEN** it starts muted
+
+### Requirement: Game name
+
+The game SHALL be called "Ippopeto" in the browser tab title and in the splash title. The splash title SHALL keep its gas trail.
+
+#### Scenario: Opening the game
+- **WHEN** a player opens the game
+- **THEN** the tab reads "Ippopeto" and the splash shows "Ippopeto" with the gas trail
+
+### Requirement: Away hippos
+
+A hippo whose player is away SHALL stay on the raft, drawn faded (more than an exhausted one), with no gas particles. Its seat card SHALL read "torna subito" under the name. A free seat SHALL keep reading "libero".
+
+#### Scenario: Teammate drops
+- **WHEN** a teammate's connection drops
+- **THEN** everyone sees their hippo fade and "torna subito" on their seat card until they return or the seat frees up

@@ -36,14 +36,18 @@ Before boarding, a player SHALL enter a name. The name SHALL be stripped of cont
 
 ### Requirement: Four seats, then spectators
 
-The raft SHALL have four seats at its corners, each with a fixed colour (orange `#ff9f1c`, pink `#e0479e`, yellow `#ffd23f`, violet `#7b5cff`). A joining player SHALL take the lowest free seat. When all four are taken, the player SHALL watch as a spectator, told "La zattera è piena: guardi da riva". A room SHALL hold at most 12 people including spectators.
+The raft SHALL have four seats at its corners, each with a fixed colour (orange `#ff9f1c`, pink `#e0479e`, yellow `#ffd23f`, violet `#7b5cff`). A joining player SHALL take the lowest free seat. When all four are taken, or a race is counting down or running, the player SHALL watch as a spectator. A full raft SHALL say "La zattera è piena: guardi da riva". A race in progress SHALL say "La gara è in corso: guardi da riva fino all’arrivo". A room SHALL hold at most 12 people including spectators.
 
 #### Scenario: Fifth player
 - **WHEN** a fifth person boards a full raft
 - **THEN** they see the race but control nothing
 
+#### Scenario: Arriving mid-race
+- **WHEN** someone boards while a race is running and a seat is free
+- **THEN** they watch, and the seat stays free until the race ends
+
 #### Scenario: Leaving frees the seat
-- **WHEN** a seated player closes the tab
+- **WHEN** a seated player closes the tab and does not come back within 15 seconds
 - **THEN** their seat shows as "Posto libero" for everyone
 
 ### Requirement: Lobby with free practice
@@ -65,3 +69,70 @@ After boarding, a seated player SHALL see the lobby: the crew list with colours 
 #### Scenario: Countdown
 - **WHEN** a seated player presses "Si parte"
 - **THEN** everyone sees a 3-second countdown, then "Via!"
+
+### Requirement: Access code
+
+When the server has an access code configured, only people whose link carries it as `?k=<code>` SHALL be able to watch or play. The code SHALL survive the automatic room-name generation and SHALL be included by "Copia il link". When no code is configured, any link SHALL work.
+
+#### Scenario: Link with the code
+- **WHEN** a colleague opens `/?room=venerdi&k=<code>`
+- **THEN** they reach the splash and can board
+
+#### Scenario: Link without a room
+- **WHEN** someone opens `/?k=<code>`
+- **THEN** a room name is generated and the URL becomes `/?k=<code>&room=<name>`
+
+#### Scenario: Local development
+- **WHEN** the server runs without an access code
+- **THEN** `/?room=prova` works with no `k`
+
+### Requirement: Refusals are explained
+
+When the game refuses a player, it SHALL say why, in a card that replaces the splash, and SHALL NOT keep retrying on its own. The card SHALL offer "Riprova", which reloads the page. The messages SHALL be:
+- wrong or missing code: "Il codice nel link non è valido. Chiedi il link a chi ha organizzato.";
+- room full: "La stanza è piena. Riprova tra poco.";
+- too many rooms: "Ci sono troppe stanze aperte. Riprova tra poco.".
+
+#### Scenario: Wrong code
+- **WHEN** someone opens a link with a wrong `k`
+- **THEN** they see the wrong-code card, and the page makes no further connection attempts
+
+#### Scenario: Thirteenth person
+- **WHEN** a room already holds 12 people and one more opens the link
+- **THEN** they see the room-full card
+
+### Requirement: Seats wait for their player
+
+When a seated player's connection drops, their seat SHALL stay theirs for 15 seconds. If the same browser tab reconnects or reloads within that time, it SHALL get the same seat back, with its gas and exhaustion as they were. After 15 seconds the seat SHALL become free. A different tab, even on the same device, SHALL NOT take a reserved seat.
+
+#### Scenario: Wi-Fi blip mid-race
+- **WHEN** a seated player loses the connection for 5 seconds during a race
+- **THEN** they are back in the same corner, and the race went on without them pushing
+
+#### Scenario: Reload
+- **WHEN** a seated player reloads the page and boards again
+- **THEN** they get their own seat back
+
+#### Scenario: Gone for good
+- **WHEN** a seated player's connection drops and they never return
+- **THEN** after 15 seconds the seat shows as "Posto libero"
+
+### Requirement: Spectators sit down between races
+
+In the lobby and on the results card, a spectator SHALL see "Siediti" whenever a seat is free and not reserved. Pressing it SHALL seat them in the lowest such seat, or tell them "La zattera è piena: guardi da riva" if someone was faster. Spectators SHALL NOT be offered a seat during the countdown or the race.
+
+#### Scenario: A seat frees up
+- **WHEN** a seated player leaves for good while a spectator is in the lobby
+- **THEN** the spectator sees "Siediti" and can take the seat without reloading
+
+#### Scenario: Two spectators, one seat
+- **WHEN** two spectators press "Siediti" for the last free seat
+- **THEN** one sits, the other is told the raft is full
+
+### Requirement: Solo hint
+
+When exactly one hippo is on board, the lobby SHALL show "Da soli si gira in tondo: invita qualcuno con il link" next to "Copia il link".
+
+#### Scenario: First to arrive
+- **WHEN** the first player boards an empty room
+- **THEN** the lobby shows the solo hint, and it disappears when a second player sits down
