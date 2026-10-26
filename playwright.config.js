@@ -17,6 +17,6 @@ module.exports = defineConfig({
     url: `http://localhost:${PORT}/healthz`,
     // A reused server might lack the debug and access-code settings the tests rely on
     reuseExistingServer: false,
-    env: { PORT: String(PORT), IPPO_DEBUG: '1', IPPO_ACCESS_CODE: 'test' },
+    env: { PORT: String(PORT), IPPO_DEBUG: '1', IPPO_ACCESS_CODE: 'test', IPPO_RESERVE_MS: '1500' },
   },
 });

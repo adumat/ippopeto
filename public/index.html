@@ -40,7 +40,9 @@
     <div class="row">
       <button id="copy-link" class="btn">Copia il link</button>
       <button id="start" class="btn primary">Si parte</button>
+      <button id="sit" class="btn primary" hidden>Siediti</button>
     </div>
+    <p id="solo-hint" class="solo" hidden>Da soli si gira in tondo: invita qualcuno con il link.</p>
     <dl class="keys">
       <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd>giri il sedere (anche con le frecce)</dd>
       <dt><kbd>Spazio</kbd></dt><dd>spingi, finché c'è gas</dd>
@@ -54,7 +56,10 @@
     <p id="final-stats"></p>
     <h3>Migliori tempi della stanza</h3>
     <ol id="best"></ol>
-    <button id="again" class="btn primary">Un altro giro</button>
+    <div class="row">
+      <button id="again" class="btn primary">Un altro giro</button>
+      <button id="sit-results" class="btn" hidden>Siediti</button>
+    </div>
   </section>
 
   <section id="denied" class="card" hidden>

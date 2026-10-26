@@ -30,6 +30,18 @@
 
   // ---------- network ----------
   let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false, denied = false;
+  // wantSeat: this tab is seated or asking for a seat, so a reconnect must rejoin
+  let wantSeat = false;
+  // Per tab and surviving reloads: lets the server hand this tab its own seat back
+  const token = (() => {
+    let t = null;
+    try { t = sessionStorage.getItem('ippo-token'); } catch { /* storage unavailable */ }
+    if (!/^[0-9a-f]{32}$/.test(t || '')) {
+      t = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
+      try { sessionStorage.setItem('ippo-token', t); } catch { /* storage unavailable */ }
+    }
+    return t;
+  })();
   const snaps = [];
   let offset = null, latest = null, best = [];
 
@@ -42,7 +54,7 @@
       retry = 0;
       everConnected = true;
       $('conn').hidden = true;
-      if (joined) send({ t: 'join', name: myName });
+      if (wantSeat) send({ t: 'join', name: myName, token });
       sendInput(true);
     };
     ws.onmessage = (e) => {
@@ -87,7 +99,10 @@
       best = m.best || [];
     } else if (m.t === 'joined') {
       mySeat = m.seat;
-      if (m.seat == null) toast('La zattera è piena: guardi da riva', 3000);
+      wantSeat = m.seat != null;
+      if (m.why === 'racing') toast('La gara è in corso: guardi da riva fino all’arrivo', 3000);
+      else if (m.seat == null) toast('La zattera è piena: guardi da riva', 3000);
+      if (latest) onSnapshot(latest);
     } else if (m.t === 's') {
       const now = performance.now() / 1000;
       const o = m.gt - now;
@@ -153,8 +168,9 @@
     myName = $('name').value.trim().slice(0, 16) || 'Ippo';
     store.set('ippo-name', myName);
     joined = true;
+    wantSeat = true;
     initAudio();
-    send({ t: 'join', name: myName });
+    send({ t: 'join', name: myName, token });
     $('name').blur();
     $('touch').hidden = !matchMedia('(pointer: coarse)').matches;
     setView(latest && racing(latest.st) ? 'race' : 'lobby');
@@ -163,6 +179,13 @@
   $('start').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('again').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('retry').addEventListener('click', () => location.reload());
+  for (const id of ['sit', 'sit-results']) {
+    $(id).addEventListener('click', (e) => {
+      wantSeat = true;
+      send({ t: 'join', name: myName, token });
+      e.currentTarget.blur();
+    });
+  }
   $('copy-link').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     try {
@@ -195,7 +218,7 @@
     const el = document.createElement('div');
     el.className = 'seat empty';
     el.style.borderColor = INK;
-    el.innerHTML = `<span class="name"></span><div class="bar"><div class="fill"></div></div>`;
+    el.innerHTML = `<span class="name"></span><span class="status">torna subito</span><div class="bar"><div class="fill"></div></div>`;
     el.querySelector('.name').style.color = INK;
     el.style.background = `linear-gradient(${c}, ${c}) left top / 8px 100% no-repeat, ${PAPER}`;
     $('seats').appendChild(el);
@@ -235,7 +258,7 @@
     }
 
     // crew
-    const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1]] : 0))) + mySeat;
+    const sig = JSON.stringify(m.s.map((s) => (s ? [s[0], s[1], s[6]] : 0))) + mySeat;
     if (sig !== crewSig) {
       crewSig = sig;
       const crew = $('crew');
@@ -255,6 +278,7 @@
       m.s.forEach((s, i) => {
         seatEls[i].classList.toggle('empty', !s);
         seatEls[i].classList.toggle('me', !!s && s[0] === myId);
+        seatEls[i].classList.toggle('away', !!s && !!s[6]);
         seatEls[i].querySelector('.name').textContent = s ? s[1] : 'libero';
       });
     }
@@ -263,6 +287,10 @@
       seatEls[i].querySelector('.fill').style.width = `${s[3]}%`;
       seatEls[i].classList.toggle('tired', !!s[5]);
     });
+    const canSit = joined && !wantSeat && mySeat == null && !racing(m.st) && m.s.some((x) => !x);
+    $('sit').hidden = !canSit;
+    $('sit-results').hidden = !canSit;
+    $('solo-hint').hidden = m.s.filter(Boolean).length !== 1;
     $('sync').classList.toggle('on', !!m.sy && m.st !== 'countdown');
     cpEls.forEach((el, i) => el.classList.toggle('done', i <= m.cp));
     updateVoices(m);
@@ -521,7 +549,7 @@
       seats = b.s.map((s, i) => {
         if (!s) return null;
         const pa = a.s[i] && a.s[i][0] === s[0] ? a.s[i][2] : s[2];
-        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5] };
+        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6] };
       });
       st = b.st;
     }
@@ -832,7 +860,7 @@
       ctx.fillStyle = 'rgba(255,248,225,0.35)';
       ctx.fill();
     }
-    ctx.globalAlpha = s.tired ? 0.65 : 1;
+    ctx.globalAlpha = s.away ? 0.3 : s.tired ? 0.65 : 1;
     ctx.strokeStyle = INK;
     ctx.lineWidth = 3.5;
     // tail

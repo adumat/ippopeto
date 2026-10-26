@@ -178,6 +178,10 @@ kbd {
 .seat .bar { height: 10px; border: 2px solid var(--ink); border-radius: 999px; margin-top: 4px; overflow: hidden; background: #fff; }
 .seat .fill { height: 100%; width: 100%; background: var(--gas); }
 .seat.tired .fill { background: #c9c2b0; }
+.seat .status { display: none; font-weight: 400; font-size: 12px; }
+.seat.away { opacity: 0.6; }
+.seat.away .status { display: block; }
+.solo { margin: 12px 0 0; font-weight: 700; }
 
 .big-time { font-family: var(--display); font-size: 64px; line-height: 1; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
 #best { padding-left: 1.4em; margin: 0 0 18px; }

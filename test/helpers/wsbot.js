@@ -15,7 +15,7 @@ class WsBot {
     });
   }
 
-  static async join(baseURL, room, name = 'Bot', k = 'test') {
+  static async join(baseURL, room, name = 'Bot', { k = 'test', token } = {}) {
     const url = new URL(baseURL);
     const ws = new WebSocket(`ws://${url.host}/ws?room=${room}&k=${k}`);
     const bot = new WsBot(ws);
@@ -23,7 +23,7 @@ class WsBot {
       ws.once('open', resolve);
       ws.once('error', reject);
     });
-    bot.send({ t: 'join', name });
+    bot.send({ t: 'join', name, token });
     const joined = await bot.waitFor((m) => m.t === 'joined');
     bot.seat = joined.seat;
     return bot;
@@ -45,6 +45,12 @@ class WsBot {
         return true;
       });
     });
+  }
+
+  // Latest snapshot's seat list.
+  seats() {
+    const last = [...this.messages].reverse().find((m) => m.t === 's');
+    return last ? last.s : [];
   }
 
   teleport(s) {
