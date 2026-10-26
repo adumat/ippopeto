@@ -1,43 +1,47 @@
 # Ippopeto 🦛💨
 
-Gioco cooperativo da browser per 1–4 persone (più spettatori): una zattera, quattro ippopotami, un fiume controcorrente. Ogni giocatore controlla un ippopotamo in un angolo della zattera: gira il sedere e spinge a gas. Chi spinge da solo fa girare la zattera, chi spinge insieme agli altri va dritto (e con tutti sincronizzati la spinta cresce del 35%).
+A cooperative browser party game for 1–4 players, plus spectators. One raft, four hippos, a river to climb against the current. Each player is a hippo in one corner of the raft: turn your rear and push with gas. Push alone and the raft spins; push together and it goes straight, and with everyone in sync the thrust grows by 35%.
 
-## Come si gioca
+The game is in Italian.
 
-- Ognuno apre lo stesso link (`/?room=nome-stanza`). Senza `room` ne viene generata una casuale.
-- `A`/`D` o le frecce: giri il sedere. `Spazio` (o `W`/`↑`): spingi finché c'è gas. `M`: audio.
-- Da telefono compaiono i pulsanti a schermo.
-- Sassi e barili fanno rimbalzare, i mulinelli trascinano, i coccodrilli riportano all'ultimo checkpoint.
-- Il percorso ha 4 checkpoint; i 5 tempi migliori restano finché la stanza esiste (in memoria).
+## Playing
 
-## Architettura
+- Everyone opens the same link (`/?room=<name>`). Without `room`, a random one is generated.
+- `A`/`D` or the arrow keys turn your rear. `Space` (or `W`/`↑`) pushes while you have gas. `M` toggles audio.
+- On phones, on-screen buttons appear.
+- Rocks and barrels bounce you, whirlpools drag you around, crocodiles send you back to the last checkpoint.
+- Four checkpoints; each room keeps its five best times for as long as it exists (in memory).
 
-- `server/`: Node.js + [`ws`](https://github.com/websockets/ws). Il server è autoritativo: simula la fisica a 60 Hz e manda snapshot a 20 Hz. I client mandano solo i tasti premuti.
-- `public/`: client statico su canvas, nessun build step. `track.js` è condiviso tra server e browser, così geometria e ostacoli mobili coincidono.
-- Stato solo in memoria: un riavvio del pod chiude le partite in corso. Per questo il Deployment ha 1 replica con strategia `Recreate`.
-- Endpoint: `/` (gioco), `/ws?room=…` (WebSocket), `/healthz`, `/stats` (stanze e giocatori connessi).
-
-Banda: ogni client riceve circa 7 KB/s, quindi 4 giocatori stanno intorno a 0,25 Mbit/s in upload.
-
-## In locale
+## Running locally
 
 ```sh
 npm ci
-npm start   # http://localhost:8080
+npm start   # http://localhost:8080/?room=test
 ```
 
-Variabili: `PORT` (default 8080), `MAX_ROOMS` (default 50).
+Several tabs in the same room are several players.
 
-## Immagine
+## Configuration
 
-Il workflow `.github/workflows/image.yml` costruisce `ghcr.io/adumat/gas-comune` (amd64 e arm64) a ogni push su `main` e sui tag `v*`, con tag `sha-xxxxxxx`, `latest` e semver.
+| Variable | Default | Meaning |
+|---|---|---|
+| `PORT` | `8080` | HTTP and WebSocket port |
+| `MAX_ROOMS` | `50` | Concurrent rooms; bounds bandwidth |
 
-Il pacchetto su GHCR nasce privato: rendilo pubblico dalle impostazioni del package, oppure crea un pull secret nel namespace e scommenta `imagePullSecrets` nel Deployment.
+Endpoints: `/` (game), `/ws?room=…` (WebSocket), `/healthz`, `/stats` (rooms and connected players).
 
-## Deploy
+## Architecture
 
-In `k8s/` c'è una base kustomize (Namespace, Deployment, Service, Ingress). L'Ingress è un esempio: imposta classe, host e TLS del tuo cluster. Con ingress-nginx alza `proxy-read-timeout` e `proxy-send-timeout` (vedi i commenti nel file), con Traefik non serve. Il server manda un ping WebSocket ogni 20 s, quindi regge anche tunnel con timeout di inattività (Cloudflare Tunnel taglia dopo 100 s).
+- `server/`: Node.js and [`ws`](https://github.com/websockets/ws). The server is authoritative: it simulates at 60 Hz and sends snapshots at 20 Hz. Clients send only their controls.
+- `public/`: static canvas client, no build step. `track.js` is shared by server and browser, so geometry and moving obstacles match on both sides.
+- State lives in memory only: a restart ends running games, so run exactly one replica.
 
-```sh
-kubectl apply -k k8s/
-```
+Each client receives about 7 KB/s, so a full raft of four costs about 0.25 Mbit/s of upload.
+
+## Image
+
+`ghcr.io/adumat/ippopeto`, built for amd64 and arm64 on every release. Releases are cut by [release-please](https://github.com/googleapis/release-please) from conventional commits. The container runs as uid 1000 on port 8080 and works with a read-only root filesystem. When it sits behind a proxy or tunnel with an idle timeout, the server's 20 s WebSocket ping keeps connections open.
+
+## Specs
+
+Behaviour is specified with [OpenSpec](https://github.com/Fission-AI/OpenSpec) in [`openspec/`](openspec/): `specs/product/` for what players experience, `specs/tech/` for how it is built, and `changes/` for work in progress.
