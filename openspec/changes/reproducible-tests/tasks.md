@@ -2,11 +2,11 @@
 
 ## 1. Unit checks
 
-- [ ] 1.1 Extract the sim bot into `test/helpers/bot.js` (`runCrew`) without changing its steering. Verify that four smart bots report a finish time close to the ~120 s from the handover
-- [ ] 1.2 Write `test/unit/difficulty.test.js`: assert that four bots finish within 300 s with checkpoints 0–3 in order, and log the two- and one-bot outcomes. Verify `npm test` passes and prints all three lines
-- [ ] 1.3 Write `test/unit/track.test.js`: the centre-line round trip every 10 px, and the gap rule as an interval union over clusters, sampling movers every 0.05 s for 20 s. Verify it passes, or report the failing obstacle to the owner before changing course data
-- [ ] 1.4 Prove the gap test can fail: temporarily move one rock to `off: 0` and confirm `npm test` names it, then revert
-- [ ] 1.5 Add `"test": "node --test test/unit/"` to `package.json` and delete `scripts/sim.js`. Verify `npm test` exits 0
+- [x] 1.1 Extract the sim bot into `test/helpers/bot.js` (`runCrew`) without changing its steering. Verify that four smart bots report a finish time close to the ~120 s from the handover
+- [x] 1.2 Write `test/unit/difficulty.test.js`: assert that four bots finish within 300 s with checkpoints 0–3 in order, and log the two- and one-bot outcomes. Verify `npm test` passes and prints all three lines
+- [x] 1.3 Write `test/unit/track.test.js`: the centre-line round trip every 10 px, and the gap rule as an interval union over clusters, sampling movers every 0.05 s for 20 s. Verify it passes, or report the failing obstacle to the owner before changing course data
+- [x] 1.4 Prove the gap test can fail: temporarily move one rock to `off: 0` and confirm `npm test` names it, then revert
+- [x] 1.5 Add `"test": "node --test test/unit/"` to `package.json` and delete `scripts/sim.js`. Verify `npm test` exits 0
 
 ## 2. Debug teleport
 
