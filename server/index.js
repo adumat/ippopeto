@@ -18,6 +18,7 @@ function codeMatches(k) {
   return !ACCESS_DIGEST || crypto.timingSafeEqual(digest(k ?? ''), ACCESS_DIGEST);
 }
 const DENY_CLOSE = { code: 4001, 'room-full': 4002, 'server-full': 4003 };
+const DEBUG = process.env.IPPO_DEBUG === '1';
 
 // Static files are loaded into memory at startup (no filesystem access at runtime)
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -120,6 +121,9 @@ function onConnection(ws, room) {
         break;
       case 'start':
         if (client.seat != null) room.start();
+        break;
+      case 'debug':
+        if (DEBUG && client.seat != null && msg.op === 'teleport') room.teleport(msg.s);
         break;
       case 'ping':
         ws.send(JSON.stringify({ t: 'pong', c: msg.c }));

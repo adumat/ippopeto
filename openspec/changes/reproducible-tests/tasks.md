@@ -10,8 +10,8 @@
 
 ## 2. Debug teleport
 
-- [ ] 2.1 Add `Room.teleport(s)` and handle `{t:'debug', op:'teleport', s}` in `server/index.js` only when `IPPO_DEBUG === '1'` and the sender is seated. Verify with a unit test on `Room`: teleporting past each checkpoint, then the finish, emits `cp` 0–3 and `finish`
-- [ ] 2.2 Document `IPPO_DEBUG` in the README as test-only. Verify the README states it must never be set in production
+- [x] 2.1 Add `Room.teleport(s)` and handle `{t:'debug', op:'teleport', s}` in `server/index.js` only when `IPPO_DEBUG === '1'` and the sender is seated. Verify with a unit test on `Room`: teleporting past each checkpoint, then the finish, emits `cp` 0–3 and `finish`
+- [x] 2.2 Document `IPPO_DEBUG` in the README as test-only. Verify the README states it must never be set in production
 
 ## 3. Browser suite
 

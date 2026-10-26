@@ -113,6 +113,10 @@ class Room {
     Object.assign(this.raft, { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 });
   }
 
+  teleport(s) {
+    this.respawn(Math.max(0, Math.min(Track.LENGTH, Number(s) || 0)));
+  }
+
   bump(impulse) {
     if (impulse > 120 && this.gt - this.lastBump > 0.25) {
       this.lastBump = this.gt;
