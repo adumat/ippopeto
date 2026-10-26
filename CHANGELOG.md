@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/adumat/ippopeto/compare/v0.1.0...v0.2.0) (2026-10-26)
+
+
+### Features
+
+* explain refused connections and stop retrying ([04c5d21](https://github.com/adumat/ippopeto/commit/04c5d2105df314dccdbb9b61695773aa5c3a8550))
+* require an access code when IPPO_ACCESS_CODE is set ([27df5a1](https://github.com/adumat/ippopeto/commit/27df5a1dc9070054828fd6927baa877557d82db2))
+
 ## 0.1.0 (2026-10-26)
 
 
