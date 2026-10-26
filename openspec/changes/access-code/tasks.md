@@ -14,4 +14,4 @@
 
 ## 3. Release
 
-- [ ] 3.1 Commit as `feat: require an access code when IPPO_ACCESS_CODE is set` and merge the resulting release PR. Verify the new image tag exists on GHCR
+- [x] 3.1 Commit as `feat: require an access code when IPPO_ACCESS_CODE is set` and merge the resulting release PR. Verify the new image tag exists on GHCR
