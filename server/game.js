@@ -16,6 +16,7 @@ const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
 const COUNTDOWN = 3;
 const SNAPSHOT_EVERY = 3; // 60 Hz ticks -> 20 Hz snapshots
+const RESERVE_MS = Number(process.env.IPPO_RESERVE_MS || 15000);
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const r3 = (v) => Math.round(v * 1000) / 1000;
@@ -26,8 +27,9 @@ function cleanName(raw) {
 }
 
 class Room {
-  constructor(id) {
+  constructor(id, { reserveMs = RESERVE_MS } = {}) {
     this.id = id;
+    this.reserveMs = reserveMs;
     this.clients = new Map(); // id -> { id, ws, seat }
     this.seats = [null, null, null, null];
     this.gt = 0; // room game time
@@ -64,22 +66,51 @@ class Room {
 
   removeClient(client) {
     this.clients.delete(client.id);
-    if (client.seat != null && this.seats[client.seat] && this.seats[client.seat].id === client.id) {
-      this.seats[client.seat] = null;
+    const seat = client.seat != null ? this.seats[client.seat] : null;
+    if (seat && seat.id === client.id) {
+      if (seat.token) {
+        // held for the same tab to come back; meanwhile the hippo idles
+        Object.assign(seat, { away: true, awayUntil: Date.now() + this.reserveMs, turn: 0, fartHeld: false });
+      } else {
+        this.seats[client.seat] = null;
+      }
     }
     if (this.clients.size === 0) this.emptySince = Date.now();
   }
 
-  join(client, name) {
+  expireAway() {
+    const now = Date.now();
+    this.seats.forEach((s, i) => {
+      if (s && s.away && now >= s.awayUntil) this.seats[i] = null;
+    });
+  }
+
+  // Returns { seat } or { seat: null, why: 'full' | 'racing' }.
+  join(client, name, token = null) {
     if (client.seat != null) {
       this.seats[client.seat].name = cleanName(name);
-      return client.seat;
+      return { seat: client.seat };
     }
+    this.expireAway();
+    if (token) {
+      const idx = this.seats.findIndex((s) => s && s.away && s.token === token);
+      if (idx !== -1) {
+        Object.assign(this.seats[idx], { id: client.id, name: cleanName(name), away: false, awayUntil: 0 });
+        client.seat = idx;
+        return { seat: idx };
+      }
+    }
+    if (this.status === 'countdown' || this.status === 'running') return { seat: null, why: 'racing' };
     const idx = this.seats.findIndex((s) => s === null);
-    if (idx === -1) return null; // raft full: spectate
+    if (idx === -1) return { seat: null, why: 'full' };
+    // a token already held by a present seat comes from a duplicated tab: that seat keeps it
+    const shared = token && this.seats.some((s) => s && s.token === token);
     this.seats[idx] = {
       id: client.id,
       name: cleanName(name),
+      token: shared ? null : token,
+      away: false,
+      awayUntil: 0,
       aim: Math.PI / 2,
       turn: 0,
       fartHeld: false,
@@ -88,7 +119,7 @@ class Room {
       gas: GAS_MAX,
     };
     client.seat = idx;
-    return idx;
+    return { seat: idx };
   }
 
   input(client, msg) {
@@ -160,14 +191,15 @@ class Room {
     const R = this.raft;
 
     // gas and aim
+    this.expireAway();
     let active = 0, farting = 0;
     for (const s of this.seats) {
       if (!s) continue;
-      active++;
+      if (!s.away) active++;
       s.aim += s.turn * AIM_SPEED * dt;
       if (s.aim > Math.PI) s.aim -= 2 * Math.PI;
       if (s.aim < -Math.PI) s.aim += 2 * Math.PI;
-      const can = s.fartHeld && !s.exhausted && s.gas > 0 && !frozen;
+      const can = s.fartHeld && !s.away && !s.exhausted && s.gas > 0 && !frozen;
       if (can) {
         s.gas -= GAS_DRAIN * dt;
         if (s.gas <= 0) {
@@ -296,7 +328,7 @@ class Room {
       sy: this.sync ? 1 : 0,
       cp: this.lastCp,
       b: this.bites,
-      s: this.seats.map((s) => (s ? [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0] : null)),
+      s: this.seats.map((s) => (s ? [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0, s.away ? 1 : 0] : null)),
       ev: this.events,
     });
     this.events = [];

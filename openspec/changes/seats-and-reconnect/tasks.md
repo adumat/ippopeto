@@ -7,9 +7,9 @@
 
 ## 2. Seat lifecycle on the server
 
-- [ ] 2.1 Implement seat reservation in `Room` (away flag, token, `awayUntil`, `IPPO_RESERVE_MS`, input cleared, freed in `step`). Verify with unit tests: disconnect keeps the seat away, the same token reclaims it with gas intact, a foreign token does not, and the seat is freed after the reserve time
-- [ ] 2.2 Move the join rules into `Room.join` returning `{seat, why}`, with no new seats in `countdown`/`running`. Forward a validated `token` from `index.js` and add `why` to `joined`. Verify with unit tests for `full`, `racing`, the mid-race reclaim and renaming
-- [ ] 2.3 Exclude away seats from pushing and from sync, and add `away` to the snapshot seat entry. Verify with a unit test: three present hippos pushing with one away get the bonus
+- [x] 2.1 Implement seat reservation in `Room` (away flag, token, `awayUntil`, `IPPO_RESERVE_MS`, input cleared, freed in `step`). Verify with unit tests: disconnect keeps the seat away, the same token reclaims it with gas intact, a foreign token does not, and the seat is freed after the reserve time
+- [x] 2.2 Move the join rules into `Room.join` returning `{seat, why}`, with no new seats in `countdown`/`running`. Forward a validated `token` from `index.js` and add `why` to `joined`. Verify with unit tests for `full`, `racing`, the mid-race reclaim and renaming
+- [x] 2.3 Exclude away seats from pushing and from sync, and add `away` to the snapshot seat entry. Verify with a unit test: three present hippos pushing with one away get the bonus
 
 ## 3. Client features
 

@@ -112,8 +112,8 @@ function onConnection(ws, room) {
     if (!msg || typeof msg !== 'object') return;
     switch (msg.t) {
       case 'join': {
-        const seat = room.join(client, msg.name);
-        ws.send(JSON.stringify({ t: 'joined', seat }));
+        const token = /^[0-9a-f]{32}$/.test(msg.token) ? msg.token : null;
+        ws.send(JSON.stringify({ t: 'joined', ...room.join(client, msg.name, token) }));
         break;
       }
       case 'in':
