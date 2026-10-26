@@ -1,8 +1,8 @@
 {
-  "name": "gas-comune",
-  "version": "0.1.0",
+  "name": "ippopeto",
+  "version": "0.0.0",
   "private": true,
-  "description": "Gioco cooperativo da browser: una zattera, quattro ippopotami, spinta a gas.",
+  "description": "Cooperative browser party game: one raft, four hippos, gas-powered thrust.",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js"

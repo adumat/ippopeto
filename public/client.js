@@ -25,7 +25,7 @@
     history.replaceState(null, '', `${location.pathname}?${params}`);
   }
   $('room-name').textContent = roomId;
-  $('name').value = store.get('gc-name') || '';
+  $('name').value = store.get('ippo-name') || '';
 
   // ---------- rete ----------
   let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false;
@@ -128,7 +128,7 @@
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
     myName = $('name').value.trim().slice(0, 16) || 'Ippo';
-    store.set('gc-name', myName);
+    store.set('ippo-name', myName);
     joined = true;
     initAudio();
     send({ t: 'join', name: myName });
@@ -285,7 +285,7 @@
 
   // ---------- audio ----------
   let audio = null, master = null, noiseBuf = null;
-  let muted = store.get('gc-muted') === '1';
+  let muted = store.get('ippo-muted') === '1';
   $('mute').textContent = muted ? '🔇' : '🔊';
   const voices = [null, null, null, null];
 
@@ -305,7 +305,7 @@
   }
   function toggleMute() {
     muted = !muted;
-    store.set('gc-muted', muted ? '1' : '0');
+    store.set('ippo-muted', muted ? '1' : '0');
     $('mute').textContent = muted ? '🔇' : '🔊';
     if (master) master.gain.value = muted ? 0 : 0.7;
   }

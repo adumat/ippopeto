@@ -151,7 +151,7 @@ setInterval(() => {
   for (const [id, r] of rooms) if (r.emptySince && now - r.emptySince > 120000) rooms.delete(id);
 }, 30000).unref();
 
-server.listen(PORT, () => console.log(`gas-comune in ascolto su :${PORT}`));
+server.listen(PORT, () => console.log(`ippopeto in ascolto su :${PORT}`));
 
 function shutdown() {
   for (const ws of wss.clients) ws.close(1001, 'server in riavvio');

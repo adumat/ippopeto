@@ -2,8 +2,8 @@
 
 ## 1. Local cleanup
 
-- [ ] 1.1 Rename to Ippopeto in `package.json` (name, version `0.0.0`, description), `<title>`, splash `<h1>`, the server log line and the README title. Verify with `grep -rni "gas.comune\|gas comune" --exclude-dir=.git --exclude-dir=openspec .` returning nothing outside `k8s/` and `CLAUDE.md`
-- [ ] 1.2 Rename localStorage keys `gc-name` and `gc-muted` to `ippo-name` and `ippo-muted` in `public/client.js`. Verify by loading the page, boarding, reloading, and seeing the name prefilled
+- [x] 1.1 Rename to Ippopeto in `package.json` (name, version `0.0.0`, description), `<title>`, splash `<h1>`, the server log line and the README title. Verify with `grep -rni "gas.comune\|gas comune" --exclude-dir=.git --exclude-dir=openspec .` returning nothing outside `k8s/` and `CLAUDE.md`
+- [x] 1.2 Rename localStorage keys `gc-name` and `gc-muted` to `ippo-name` and `ippo-muted` in `public/client.js`. Verify by loading the page, boarding, reloading, and seeing the name prefilled
 - [ ] 1.3 Translate code comments in `server/`, `public/` and `Dockerfile` to English, without touching UI strings. Verify `npm start` still serves `/healthz` and the page loads with no console errors
 - [ ] 1.4 Delete `k8s/`. Rewrite the README in English: what the game is, how to play, local run, environment variables, image, and a pointer to `openspec/`. Verify the README mentions no deleted path
 - [ ] 1.5 Replace `CLAUDE.md` with `AGENTS.md` as described in design.md. Verify no `CLAUDE.md` remains and AGENTS.md links to `openspec/config.yaml`

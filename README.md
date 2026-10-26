@@ -1,4 +1,4 @@
-# Gas Comune 🦛💨
+# Ippopeto 🦛💨
 
 Gioco cooperativo da browser per 1–4 persone (più spettatori): una zattera, quattro ippopotami, un fiume controcorrente. Ogni giocatore controlla un ippopotamo in un angolo della zattera: gira il sedere e spinge a gas. Chi spinge da solo fa girare la zattera, chi spinge insieme agli altri va dritto (e con tutti sincronizzati la spinta cresce del 35%).
 
