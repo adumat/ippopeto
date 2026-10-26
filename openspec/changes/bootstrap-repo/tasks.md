@@ -10,9 +10,9 @@
 
 ## 2. Release pipeline
 
-- [ ] 2.1 Add `release-please-config.json` (`release-type: node`, `include-component-in-tag: false`) and `.release-please-manifest.json` at `0.0.0`. Verify both parse with `jq . <file>`
-- [ ] 2.2 Replace `.github/workflows/image.yml` with `release.yml`: a release-please job, then a docker job gated on `release_created`, tagging `type=raw` from `version` plus `latest`, amd64 and arm64. Verify with `actionlint` or a YAML parse
-- [ ] 2.3 Run the `Dockerfile` dependency stage on `--platform=$BUILDPLATFORM`. Verify `docker buildx build --platform linux/amd64,linux/arm64 .` succeeds locally
+- [x] 2.1 Add `release-please-config.json` (`release-type: node`, `include-component-in-tag: false`) and `.release-please-manifest.json` at `0.0.0`. Verify both parse with `jq . <file>`
+- [x] 2.2 Replace `.github/workflows/image.yml` with `release.yml`: a release-please job, then a docker job gated on `release_created`, tagging `type=raw` from `version` plus `latest`, amd64 and arm64. Verify with `actionlint` or a YAML parse
+- [x] 2.3 Run the `Dockerfile` dependency stage on `--platform=$BUILDPLATFORM`. Verify `docker buildx build --platform linux/amd64,linux/arm64 .` succeeds locally
 
 ## 3. Publish
 
