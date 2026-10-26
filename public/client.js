@@ -4,6 +4,8 @@
   // indexed by the colour a player keeps for as long as they are seated
   const COLORS = ['#ff9f1c', '#e0479e', '#ffd23f', '#7b5cff', '#ef4b3f', '#8fd3ff'];
   const INK = '#1f2b2e', WATER = '#3fa7b8', GRASS = '#7fa347', BUSH = '#5f8a35', SAND = '#efdda8';
+  // brown is reserved for the peto vestito
+  const BROWN = '#6b4423', BROWN_LIGHT = '#8c5a2e';
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
   const $ = (id) => document.getElementById(id);
   const canvas = $('game');
@@ -316,6 +318,16 @@
         blip(660, 0.12, 'sine', 0.2);
         setTimeout(() => blip(990, 0.18, 'sine', 0.2), 110);
         break;
+      case 'shart': {
+        const seat = latest && latest.s[ev.i];
+        if (!seat) break;
+        toast(`${seat[1]} se l’è fatta addosso`, 2600);
+        stains.set(seat[0], performance.now() + 10000);
+        spawnSplats();
+        playVestito(seat[7]);
+        shake = Math.max(shake, 12);
+        break;
+      }
       case 'bite':
         toast('Gnam! Si torna all’ultimo checkpoint', 2200);
         chomp();
@@ -337,7 +349,8 @@
   function showResults(ev) {
     $('final-time').textContent = fmt(ev.time);
     const morsi = ev.bites === 1 ? '1 morso di coccodrillo' : `${ev.bites} morsi di coccodrillo`;
-    $('final-stats').textContent = `${morsi}, ${ev.sync}% del tempo a spingere tutti insieme.`;
+    const vestiti = ev.sharts === 1 ? '1 peto vestito' : `${ev.sharts || 0} peti vestiti`;
+    $('final-stats').textContent = `${morsi}, ${vestiti}, ${ev.sync}% del tempo a spingere tutti insieme.`;
     const ol = $('best');
     ol.innerHTML = '';
     for (const b of best) {
@@ -580,6 +593,77 @@
     return { a: last, b: last, f: 0, rg };
   }
 
+  // ---------- peto vestito ----------
+  // Splats live in screen space, in fractions of the viewport so a resize keeps them.
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPLAT_HOLD = 4, SPLAT_DRIP = 1.5;
+  let splats = [];
+  const stains = new Map(); // seat id -> time the stain wears off
+  function spawnSplats() {
+    const now = performance.now() / 1000;
+    const n = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      let x, y;
+      do {
+        x = 0.08 + Math.random() * 0.84;
+        y = 0.08 + Math.random() * 0.78;
+      } while (Math.hypot(x - 0.5, y - 0.5) < 0.2); // keep the raft partly visible
+      // an irregular body with a few long spikes, plus droplets thrown around it
+      const outline = Array.from({ length: 32 }, (_, k) => 0.78 + Math.random() * 0.22 + (k % 4 === 0 && Math.random() < 0.6 ? 0.4 + Math.random() * 0.6 : 0));
+      const drops = Array.from({ length: 4 + Math.floor(Math.random() * 5) }, () => {
+        const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * 1.1;
+        return { x: Math.cos(a) * d, y: Math.sin(a) * d, r: 0.07 + Math.random() * 0.13 };
+      });
+      splats.push({ x, y, r: 0.05 + Math.random() * 0.05, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
+    }
+    splats = splats.slice(-10);
+  }
+  function drawSplats() {
+    const now = performance.now() / 1000;
+    splats = splats.filter((sp) => now - sp.born < SPLAT_HOLD + SPLAT_DRIP);
+    const unit = Math.min(cw, ch);
+    for (const sp of splats) {
+      const age = now - sp.born;
+      if (age < 0) continue;
+      const drip = Math.max(0, (age - SPLAT_HOLD) / SPLAT_DRIP);
+      ctx.save();
+      ctx.globalAlpha = 0.93 * (1 - drip);
+      ctx.translate(sp.x * cw, sp.y * ch + (reducedMotion ? 0 : drip * unit * 0.12));
+      if (!reducedMotion) ctx.scale(1, 1 + drip * 0.9);
+      const R = sp.r * unit;
+      ctx.rotate(sp.rot);
+      ctx.fillStyle = BROWN;
+      ctx.beginPath();
+      const n = sp.outline.length;
+      for (let k = 0; k <= n; k++) {
+        const a = (k / n) * Math.PI * 2, rr = sp.outline[k % n] * R;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (k === 0) ctx.moveTo(px, py);
+        else {
+          // curve through the midpoint so spikes stay rounded at the tip
+          const pa = ((k - 0.5) / n) * Math.PI * 2, pr = ((sp.outline[k - 1] + sp.outline[k % n]) / 2) * R * 0.92;
+          ctx.quadraticCurveTo(Math.cos(pa) * pr, Math.sin(pa) * pr, px, py);
+        }
+      }
+      ctx.fill();
+      for (const d of sp.drops) {
+        ctx.beginPath();
+        ctx.arc(d.x * R, d.y * R, d.r * R, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // a wet highlight
+      ctx.fillStyle = BROWN_LIGHT;
+      ctx.beginPath();
+      ctx.ellipse(-0.25 * R, -0.3 * R, 0.32 * R, 0.16 * R, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,248,225,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(-0.32 * R, -0.36 * R, 0.12 * R, 0.05 * R, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function frame() {
     const now = performance.now() / 1000;
     const dt = Math.min(0.05, now - lastFrame);
@@ -601,7 +685,7 @@
       seats = b.s.map((s, i) => {
         if (!s) return null;
         const pa = a.s[i] && a.s[i][0] === s[0] ? a.s[i][2] : s[2];
-        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6], colour: s[7] };
+        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6], colour: s[7], stained: (stains.get(s[0]) || 0) > performance.now() };
       });
       st = b.st;
     }
@@ -803,6 +887,7 @@
 
     // on-screen HUD
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawSplats();
     if (st === 'countdown' && latest) {
       const n = Math.ceil(latest.tm);
       if (n !== lastCountBeep) {
@@ -931,6 +1016,14 @@
     ctx.ellipse(0, 0, 27, 20, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    if (s.stained) {
+      ctx.fillStyle = BROWN;
+      for (const [x, y, rx, ry] of [[-17, 3, 10, 8], [-22, -6, 6, 5]]) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, rx, ry, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     // ears
     for (const y of [-11, 11]) {
       ctx.beginPath();

@@ -127,6 +127,7 @@ function onConnection(ws, room) {
         break;
       case 'debug':
         if (DEBUG && client.seat != null && msg.op === 'teleport') room.teleport(msg.s);
+        if (DEBUG && client.seat != null && msg.op === 'shart' && room.seats[msg.seat]) room.shart(room.seats[msg.seat]);
         break;
       case 'ping':
         ws.send(JSON.stringify({ t: 'pong', c: msg.c }));

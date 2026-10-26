@@ -184,6 +184,15 @@ class Room {
     Object.assign(this.raft, { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 });
   }
 
+  // peto vestito: the tank empties and locks exactly as when it runs dry
+  shart(seat) {
+    seat.gas = 0;
+    seat.exhausted = true;
+    seat.farting = false;
+    this.events.push({ k: 'shart', i: this.seats.indexOf(seat) });
+    if (this.status === 'running') this.sharts++;
+  }
+
   teleport(s) {
     this.respawn(Math.max(0, Math.min(Track.LENGTH, Number(s) || 0)));
   }
@@ -241,11 +250,7 @@ class Room {
       if (s.aim < -Math.PI) s.aim += 2 * Math.PI;
       const can = s.fartHeld && !s.away && !s.exhausted && s.gas > 0 && !frozen;
       if (can && s.gas < SHART_GAS && this.random() < 1 - Math.exp(-SHART_RATE * (1 - s.gas / SHART_GAS) ** 2 * dt)) {
-        // peto vestito: the tank empties and locks exactly as when it runs dry
-        s.gas = 0;
-        s.exhausted = true;
-        this.events.push({ k: 'shart', i: this.seats.indexOf(s) });
-        if (this.status === 'running') this.sharts++;
+        this.shart(s);
       } else if (can) {
         s.gas -= GAS_DRAIN * dt;
         if (s.gas <= 0) {

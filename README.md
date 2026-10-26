@@ -10,6 +10,7 @@ The game is in Italian.
 - `A`/`D` or the arrow keys turn your rear. `Space` (or `W`/`↑`) pushes while you have gas. `M` toggles audio.
 - On phones, on-screen buttons appear.
 - Rocks and barrels bounce you, whirlpools drag you around, crocodiles send you back to the last checkpoint.
+- Forcing it on an almost empty tank risks a peto vestito: your tank empties, everyone's screen gets splattered, and it shows up in the results.
 - Four checkpoints; each room keeps its five best times for as long as it exists (in memory).
 
 ## Running locally

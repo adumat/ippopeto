@@ -28,6 +28,10 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 - **Bandwidth.** About 7 KB/s per client. A change to snapshot content or rate states its cost in bytes per second.
 - **Course rule.** Every solid obstacle leaves a gap of at least 164 px (raft diameter + 20) on one side. Re-verify after any course edit.
 
+## Peto vestito
+
+Pushing below `SHART_GAS` (25) risks soiling yourself at `SHART_RATE` (1.45/s) × (1 − gas/25)², sampled every step in `server/game.js`: about 35 % when forcing a full drain to zero, about 3 % when letting go at 15. It empties and locks the tank and emits `{k:'shart', i}`. These two constants are the tuning knobs; change them only with the owner, and keep the 2/4/6-bot difficulty tests green. `Room` takes an injectable `random` so tests stay reproducible.
+
 ## Seats and screens
 
 - The raft has 2–6 seats: as many as people sitting, never fewer than 2. `Track.seatPositions(n)` places them evenly around the edge, symmetric about the bow, identically on server and client; the snapshot carries only the count. The list compacts outside a race and is frozen during one, so seat indices shift: find a player by id, never by index.
@@ -44,6 +48,7 @@ The look is settled; do not redesign it.
 - Tokens: ink `#1f2b2e`, water `#3fa7b8`, grass `#7fa347`, sand `#efdda8`, wood `#9c6b3d`, gas `#c6dc5a`, paper `#fff8e1`.
 - Player colours, in the order they are handed out: `#ff9f1c`, `#e0479e`, `#ffd23f`, `#7b5cff`, `#ef4b3f`, `#8fd3ff`. A colour belongs to the person, not to a seat.
 - Bagel Fat One for titles and numbers, Atkinson Hyperlegible for text.
+- Brown (`#6b4423`, `#8c5a2e`) exists only for the peto vestito: the splats and the stain. The splats covering part of the view are a deliberate exception to "the title is the only bold element".
 - "Sticker" cards (3 px ink border, solid offset shadow) and pill buttons. The gas-trail title is the only bold element.
 
 UI copy is Italian:

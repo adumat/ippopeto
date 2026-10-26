@@ -32,6 +32,7 @@ test('a crew races to the finish and goes again', async ({ browser, baseURL }) =
     await expect(page.locator('#results')).toBeVisible();
     await expect(page.locator('#final-time')).toHaveText(/^\d+:\d\d\.\d$/);
     await expect(page.locator('#final-stats')).toContainText('morsi di coccodrillo');
+    await expect(page.locator('#final-stats')).toContainText(/\d+ pet[oi] vestit[oi]/);
     await expect(page.locator('#final-stats')).toContainText('% del tempo');
     await expect(page.locator('#best li')).toHaveCount(1);
     await expect(page.locator('#lobby')).toBeHidden();
