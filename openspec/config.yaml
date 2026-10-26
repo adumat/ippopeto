@@ -1,0 +1,14 @@
+schema: spec-driven
+
+context: |
+  Language: English. UI copy is Italian and is quoted verbatim.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Specs are split in two trees:
+  - specs/product/  what players experience: rules, game logic, tuning, flow, look and sound.
+    A product requirement must be checkable by playing, without reading code.
+  - specs/tech/     how it is built: architecture, wire protocol, runtime limits, netcode, delivery.
+  Game logic (physics constants, obstacles, scoring) is product, even when it lives in server code.
+
+  Project constraints: Node 22 + ws, vanilla JS canvas client with no build step,
+  authoritative server with in-memory state, one replica. Upload budget at home is ~8 Mbit/s.
