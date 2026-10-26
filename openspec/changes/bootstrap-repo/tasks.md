@@ -17,13 +17,13 @@
 ## 3. Publish
 
 - [x] 3.1 Create the public repo `adumat/ippopeto` with `gh repo create`, enable "Allow GitHub Actions to create and approve pull requests", and push `main`. Verify `gh repo view adumat/ippopeto --json visibility` reports `PUBLIC`
-- [ ] 3.2 Merge the release-please PR for `0.1.0`. Verify the tag `v0.1.0` exists and the release workflow pushed `ghcr.io/adumat/ippopeto:0.1.0`
-- [ ] 3.3 Have the owner set the GHCR package public from its settings page. Verify `docker logout ghcr.io; docker pull ghcr.io/adumat/ippopeto:0.1.0` succeeds
-- [ ] 3.4 Run the published image with `--read-only --user 1000:1000`. Verify `/healthz` answers `ok` and `/` serves the page
+- [x] 3.2 Merge the release-please PR for `0.1.0`. Verify the tag `v0.1.0` exists and the release workflow pushed `ghcr.io/adumat/ippopeto:0.1.0`
+- [x] 3.3 Make the GHCR package public (it inherited the public visibility of the repository, no manual step needed). Verify `docker logout ghcr.io; docker pull ghcr.io/adumat/ippopeto:0.1.0` succeeds
+- [x] 3.4 Run the published image with `--read-only --user 1000:1000`. Verify `/healthz` answers `ok` and `/` serves the page
 
 ## 4. Homelab
 
-- [ ] 4.1 In the homelab repo, `git submodule add https://github.com/adumat/ippopeto.git services/ippopeto` and commit `.gitmodules` with the gitlink; later pointer bumps stay uncommitted, as for peekaboo. Verify `git submodule status` lists it
+- [x] 4.1 In the homelab repo, `git submodule add https://github.com/adumat/ippopeto.git services/ippopeto` and commit `.gitmodules` with the gitlink; later pointer bumps stay uncommitted, as for peekaboo. Verify `git submodule status` lists it
 
 ## Workflow follow-up
 
