@@ -16,7 +16,7 @@
 
 ## 3. Publish
 
-- [ ] 3.1 Create the public repo `adumat/ippopeto` with `gh repo create`, enable "Allow GitHub Actions to create and approve pull requests", and push `main`. Verify `gh repo view adumat/ippopeto --json visibility` reports `PUBLIC`
+- [x] 3.1 Create the public repo `adumat/ippopeto` with `gh repo create`, enable "Allow GitHub Actions to create and approve pull requests", and push `main`. Verify `gh repo view adumat/ippopeto --json visibility` reports `PUBLIC`
 - [ ] 3.2 Merge the release-please PR for `0.1.0`. Verify the tag `v0.1.0` exists and the release workflow pushed `ghcr.io/adumat/ippopeto:0.1.0`
 - [ ] 3.3 Have the owner set the GHCR package public from its settings page. Verify `docker logout ghcr.io; docker pull ghcr.io/adumat/ippopeto:0.1.0` succeeds
 - [ ] 3.4 Run the published image with `--read-only --user 1000:1000`. Verify `/healthz` answers `ok` and `/` serves the page
