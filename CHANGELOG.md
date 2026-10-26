@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/adumat/ippopeto/compare/v0.2.0...v0.3.0) (2026-10-26)
+
+
+### Features
+
+* hold a disconnected player's seat for 15 seconds ([39266ef](https://github.com/adumat/ippopeto/commit/39266efc3a0d15eedfeee2347badce75e006eb0a))
+* let spectators sit between races and players reclaim their seat ([ff5a799](https://github.com/adumat/ippopeto/commit/ff5a799ba483bacbe2c5f1e57366cbd2cfa35046))
+
 ## [0.2.0](https://github.com/adumat/ippopeto/compare/v0.1.0...v0.2.0) (2026-10-26)
 
 
