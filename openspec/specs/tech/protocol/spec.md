@@ -79,13 +79,17 @@ A snapshot SHALL be `{t:'s', gt, st, tm, r, sy, cp, b, s, ev}`:
 - `tm` countdown seconds left while counting down, race time otherwise;
 - `r` the raft as `[x, y, a, vx, vy]`;
 - `sy` 1 while the sync bonus is active; `cp` last checkpoint index, -1 for none; `b` bites;
-- `s` the seats, 2 to 6 entries, each `null` or `[id, name, aim, gas, farting, exhausted, away, colour]`, where `colour` is 0–5.
+- `s` the seats.
 
-Positions SHALL be rounded to 0.1, angles and `gt` to 0.001. The seat positions SHALL follow from the entry count, computed identically by server and client.
+Positions SHALL be rounded to 0.1, angles and `gt` to 0.001.
 
 #### Scenario: Snapshot size
 - **WHEN** six hippos are seated and no events fire
 - **THEN** a snapshot is a few hundred bytes
+
+### Requirement: Seat entries
+
+The snapshot's `s` SHALL hold 2 to 6 entries, each `null` or `[id, name, aim, gas, farting, exhausted, away, colour]`, where `colour` is 0–5. The seat positions SHALL follow from the entry count, computed identically by server and client.
 
 #### Scenario: Reserved seat
 - **WHEN** a seated client disconnects
