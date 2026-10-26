@@ -34,22 +34,6 @@ Before boarding, a player SHALL enter a name. The name SHALL be stripped of cont
 - **WHEN** a player who boarded yesterday opens a new link
 - **THEN** the name field is prefilled with yesterday's name
 
-### Requirement: Four seats, then spectators
-
-The raft SHALL have four seats at its corners, each with a fixed colour (orange `#ff9f1c`, pink `#e0479e`, yellow `#ffd23f`, violet `#7b5cff`). A joining player SHALL take the lowest free seat. When all four are taken, or a race is counting down or running, the player SHALL watch as a spectator. A full raft SHALL say "La zattera è piena: guardi da riva". A race in progress SHALL say "La gara è in corso: guardi da riva fino all’arrivo". A room SHALL hold at most 12 people including spectators.
-
-#### Scenario: Fifth player
-- **WHEN** a fifth person boards a full raft
-- **THEN** they see the race but control nothing
-
-#### Scenario: Arriving mid-race
-- **WHEN** someone boards while a race is running and a seat is free
-- **THEN** they watch, and the seat stays free until the race ends
-
-#### Scenario: Leaving frees the seat
-- **WHEN** a seated player closes the tab and does not come back within 15 seconds
-- **THEN** their seat shows as "Posto libero" for everyone
-
 ### Requirement: Lobby with free practice
 
 After boarding, a seated player SHALL see the lobby: the crew list with colours and free seats, "Copia il link", "Si parte", and a short key guide. The raft SHALL already be in the water and fully controllable, so the crew can practise. Bites during practice SHALL NOT be counted.
@@ -119,14 +103,14 @@ When a seated player's connection drops, their seat SHALL stay theirs for 15 sec
 
 ### Requirement: Spectators sit down between races
 
-In the lobby and on the results card, a spectator SHALL see "Siediti" whenever a seat is free and not reserved. Pressing it SHALL seat them in the lowest such seat, or tell them "La zattera è piena: guardi da riva" if someone was faster. Spectators SHALL NOT be offered a seat during the countdown or the race.
+In the lobby and on the results card, a spectator SHALL see "Siediti" whenever fewer than 6 seats are taken or reserved. Pressing it SHALL seat them, or tell them "La zattera è piena: guardi da riva" if someone was faster. Spectators SHALL NOT be offered a seat during the countdown or the race.
 
 #### Scenario: A seat frees up
-- **WHEN** a seated player leaves for good while a spectator is in the lobby
-- **THEN** the spectator sees "Siediti" and can take the seat without reloading
+- **WHEN** one of six seated players leaves for good while a spectator is in the lobby
+- **THEN** the spectator sees "Siediti" and can sit without reloading
 
 #### Scenario: Two spectators, one seat
-- **WHEN** two spectators press "Siediti" for the last free seat
+- **WHEN** two spectators press "Siediti" with five aboard
 - **THEN** one sits, the other is told the raft is full
 
 ### Requirement: Solo hint
@@ -136,3 +120,31 @@ When exactly one hippo is on board, the lobby SHALL show "Da soli si gira in ton
 #### Scenario: First to arrive
 - **WHEN** the first player boards an empty room
 - **THEN** the lobby shows the solo hint, and it disappears when a second player sits down
+
+### Requirement: Two to six seats, then spectators
+
+The raft SHALL have as many seats as people sitting on it, never fewer than 2 nor more than 6. A joining player SHALL get a seat while fewer than 6 are taken or reserved. With 6, or while a race is counting down or running, the player SHALL watch as a spectator. A full raft SHALL say "La zattera è piena: guardi da riva". A race in progress SHALL say "La gara è in corso: guardi da riva fino all’arrivo". A room SHALL hold at most 12 people including spectators.
+
+#### Scenario: Seventh player
+- **WHEN** a seventh person boards a raft with six aboard
+- **THEN** they see the race but control nothing
+
+#### Scenario: Arriving mid-race
+- **WHEN** someone boards while a race is running with fewer than six aboard
+- **THEN** they watch until the race ends
+
+#### Scenario: Leaving the lobby shrinks the raft
+- **WHEN** one of five seated players closes the tab in the lobby and does not come back within 15 seconds
+- **THEN** the raft has four seats and the others keep their colours
+
+#### Scenario: Playing alone
+- **WHEN** a single player boards an empty room
+- **THEN** the raft has two seats, one of them shown as "Posto libero"
+
+### Requirement: The raft is fixed for the race
+
+The seat count SHALL change only in the lobby and on the results card. From "Si parte" until the race ends it SHALL stay as it was. A seat whose player leaves mid-race SHALL stay empty until the race ends.
+
+#### Scenario: Someone leaves mid-race
+- **WHEN** one of five players leaves for good during the race
+- **THEN** the raft keeps five seats, one empty, until the finish

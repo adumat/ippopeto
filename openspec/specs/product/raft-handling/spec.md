@@ -18,18 +18,6 @@ On touch devices (`pointer: coarse`) three on-screen buttons SHALL offer the sam
 - **WHEN** a player switches window while holding Space
 - **THEN** their hippo stops pushing
 
-### Requirement: Thrust comes from the corner
-
-A pushing hippo SHALL apply a force of 520 opposite to where its rear points, at its own seat. The force therefore both moves and rotates the raft. Each rear SHALL start pointing backwards (towards the stern).
-
-#### Scenario: Pushing alone
-- **WHEN** a single hippo pushes with its rear backwards
-- **THEN** the raft moves forward and turns, because the force is off-centre
-
-#### Scenario: Two hippos on the same side
-- **WHEN** both stern hippos push backwards together
-- **THEN** their torques cancel and the raft goes straight
-
 ### Requirement: Gas economy
 
 Each hippo SHALL have a gas tank of 100. Pushing SHALL drain 28 per second; not pushing SHALL refill 16 per second. A tank that hits zero SHALL lock that hippo out until it refills to 35. Gas SHALL neither drain nor push during the countdown.
@@ -61,3 +49,27 @@ The raft SHALL behave as a heavy body on water: mass 4, linear drag 1.1 relative
 #### Scenario: Letting go
 - **WHEN** the whole crew stops pushing
 - **THEN** the raft slows down and drifts back with the current
+
+### Requirement: Thrust comes from the seat
+
+A pushing hippo SHALL apply a force of 520 × √(4/N), where N is the raft's seat count, opposite to where its rear points, at its own seat. The force therefore both moves and rotates the raft. Each rear SHALL start pointing backwards (towards the stern).
+
+#### Scenario: Pushing alone
+- **WHEN** a single hippo pushes with its rear backwards
+- **THEN** the raft moves forward and turns, because the force is off-centre
+
+#### Scenario: Two hippos on opposite sides
+- **WHEN** both hippos of a two-seat raft push backwards together
+- **THEN** their torques cancel and the raft goes straight
+
+#### Scenario: Crew size
+- **WHEN** every hippo pushes backwards in sync
+- **THEN** a crew of 2 is about 0.7 times, and a crew of 6 about 1.22 times, as fast as a crew of 4
+
+### Requirement: Seats around the edge
+
+The N seats SHALL be evenly spaced on a circle of radius 51 around the raft's centre, symmetric about the bow axis. With 4 seats they SHALL be at the corners, as on the original raft; with 2 on the left and right sides.
+
+#### Scenario: Six aboard
+- **WHEN** six hippos are seated
+- **THEN** they form a hexagon, three on each side
