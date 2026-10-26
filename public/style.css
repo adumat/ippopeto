@@ -35,6 +35,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; t
 #splash { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 440px; }
 #lobby { left: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); width: 340px; }
 #results { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 400px; text-align: left; }
+#denied { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 400px; }
 
 .title {
   font-family: var(--display);

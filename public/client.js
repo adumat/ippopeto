@@ -18,6 +18,7 @@
   const ADJS = ['pigra', 'felice', 'sonora', 'gentile', 'fiera', 'calda', 'furba', 'lenta'];
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const params = new URLSearchParams(location.search);
+  const accessCode = params.get('k') || '';
   let roomId = (params.get('room') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 24);
   if (!roomId) {
     roomId = `${pick(NOUNS)}-${pick(ADJS)}-${Math.floor(Math.random() * 90 + 10)}`;
@@ -28,14 +29,15 @@
   $('name').value = store.get('ippo-name') || '';
 
   // ---------- network ----------
-  let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false;
+  let ws = null, myId = null, mySeat = null, joined = false, myName = '', retry = 0, everConnected = false, denied = false;
   const snaps = [];
   let offset = null, latest = null, lastStatus = null, best = [];
 
   function connect() {
     const base = location.pathname.replace(/[^/]*$/, '');
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}${base}ws?room=${encodeURIComponent(roomId)}`);
+    const k = accessCode ? `&k=${encodeURIComponent(accessCode)}` : '';
+    ws = new WebSocket(`${proto}://${location.host}${base}ws?room=${encodeURIComponent(roomId)}${k}`);
     ws.onopen = () => {
       retry = 0;
       everConnected = true;
@@ -48,8 +50,13 @@
       try { m = JSON.parse(e.data); } catch { return; }
       handle(m);
     };
-    ws.onclose = () => {
+    ws.onclose = (e) => {
       mySeat = null;
+      if (DENY_REASONS[e.code]) {
+        showDenied(DENY_REASONS[e.code]);
+        return;
+      }
+      if (denied) return;
       if (everConnected) $('conn').hidden = false;
       setTimeout(connect, Math.min(5000, 400 * 2 ** retry++));
     };
@@ -58,8 +65,24 @@
     if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
   }
 
+  const DENY_REASONS = { 4001: 'code', 4002: 'room-full', 4003: 'server-full' };
+  const DENY_TEXT = {
+    code: 'Il codice nel link non è valido. Chiedi il link a chi ha organizzato.',
+    'room-full': 'La stanza è piena. Riprova tra poco.',
+    'server-full': 'Ci sono troppe stanze aperte. Riprova tra poco.',
+  };
+  function showDenied(reason) {
+    if (denied) return;
+    denied = true;
+    for (const id of ['splash', 'lobby', 'results', 'hud', 'touch', 'conn']) $(id).hidden = true;
+    $('denied-text').textContent = DENY_TEXT[reason] || DENY_TEXT.code;
+    $('denied').hidden = false;
+  }
+
   function handle(m) {
-    if (m.t === 'hello') {
+    if (m.t === 'denied') {
+      showDenied(m.reason);
+    } else if (m.t === 'hello') {
       myId = m.id;
       best = m.best || [];
     } else if (m.t === 'joined') {
@@ -140,6 +163,7 @@
   });
   $('start').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('again').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
+  $('retry').addEventListener('click', () => location.reload());
   $('copy-link').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     try {

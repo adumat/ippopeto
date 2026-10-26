@@ -8,9 +8,9 @@
 
 ## 2. Client
 
-- [ ] 2.1 Read `k` from the page URL and append `&k=` to the WebSocket URL when present. Verify in devtools that the socket URL carries `k`, and that a URL without `room` keeps `k` after the name is generated
-- [ ] 2.2 Handle `denied`: stop the reconnect loop, hide the splash and HUD, and show the denied card with the reason's copy and "Riprova". Also stop on close codes 4001–4003 without a frame. Verify each reason by hand: wrong code, `MAX_ROOMS=0`, and a room filled with 12 tabs. No further sockets may open (devtools Network, WS filter)
-- [ ] 2.3 Add the denied card markup and styles, following the existing card style and copy rules. Verify at 390×844 and 1280×800 that the card is centred and readable
+- [x] 2.1 Read `k` from the page URL and append `&k=` to the WebSocket URL when present. Verify in devtools that the socket URL carries `k`, and that a URL without `room` keeps `k` after the name is generated
+- [x] 2.2 Handle `denied`: stop the reconnect loop, hide the splash and HUD, and show the denied card with the reason's copy and "Riprova". Also stop on close codes 4001–4003 without a frame. Verify each reason by hand: wrong code, `MAX_ROOMS=0`, and a room filled with 12 tabs. No further sockets may open (devtools Network, WS filter)
+- [x] 2.3 Add the denied card markup and styles, following the existing card style and copy rules. Verify at 390×844 and 1280×800 that the card is centred and readable
 
 ## 3. Release
 
