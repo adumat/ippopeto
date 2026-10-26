@@ -14,7 +14,7 @@
 
 - [x] 3.1 Draw seats from `seatPositions(s.length)`, colours from the seat's colour field (six colours), hippos at 0.68 scale for N ≥ 5, and find the own seat by id. Verify the race, touch and reconnect e2e specs pass
 - [x] 3.2 Rebuild the seat cards and the lobby crew list for N, and shrink cards below 640 px for N ≥ 5. Verify with an e2e that six seated players see six cards inside a 390 px viewport
-- [ ] 3.3 Send the owner screenshots of 2, 4 and 6 aboard. Verify the owner approves the look
+- [x] 3.3 Send the owner screenshots of 2, 4 and 6 aboard. Verify the owner approves the look
 
 ## 4. Docs
 
