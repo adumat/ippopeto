@@ -614,7 +614,7 @@
         const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * 1.1;
         return { x: Math.cos(a) * d, y: Math.sin(a) * d, r: 0.07 + Math.random() * 0.13 };
       });
-      splats.push({ x, y, r: 0.05 + Math.random() * 0.05, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
+      splats.push({ x, y, r: 0.08 + Math.random() * 0.07, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
     }
     splats = splats.slice(-10);
   }

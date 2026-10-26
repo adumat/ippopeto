@@ -8,7 +8,7 @@
 
 ## 2. Client
 
-- [ ] 2.1 Add the brown tokens and a screen-space splat layer (4–6 splats, 4 s, drip, reduced-motion fade, cap 10). Verify with a screenshot approved by the owner
+- [x] 2.1 Add the brown tokens and a screen-space splat layer (4–6 splats, 4 s, drip, reduced-motion fade, cap 10). Verify with a screenshot approved by the owner
 - [x] 2.2 Add the 10 s stain on the culprit's hippo, the toast "<name> se l’è fatta addosso", and the vestito sound. Verify by hand that the toast names the right player
 - [x] 2.3 Add "N peti vestiti" to the results stats, singular or plural. Verify in `race.spec` that the stats line contains the count
 
