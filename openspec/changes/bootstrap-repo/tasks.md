@@ -6,7 +6,7 @@
 - [x] 1.2 Rename localStorage keys `gc-name` and `gc-muted` to `ippo-name` and `ippo-muted` in `public/client.js`. Verify by loading the page, boarding, reloading, and seeing the name prefilled
 - [x] 1.3 Translate code comments in `server/`, `public/` and `Dockerfile` to English, without touching UI strings. Verify `npm start` still serves `/healthz` and the page loads with no console errors
 - [x] 1.4 Delete `k8s/`. Rewrite the README in English: what the game is, how to play, local run, environment variables, image, and a pointer to `openspec/`. Verify the README mentions no deleted path
-- [ ] 1.5 Replace `CLAUDE.md` with `AGENTS.md` as described in design.md. Verify no `CLAUDE.md` remains and AGENTS.md links to `openspec/config.yaml`
+- [x] 1.5 Replace `CLAUDE.md` with `AGENTS.md` as described in design.md. Verify no `CLAUDE.md` remains and AGENTS.md links to `openspec/config.yaml`
 
 ## 2. Release pipeline
 
