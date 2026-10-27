@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/adumat/ippopeto/compare/v0.5.1...v0.6.0) (2026-10-27)
+
+
+### Features
+
+* add the pause button, menu and keys to the client ([1adeadd](https://github.com/adumat/ippopeto/commit/1adeadd86db62e9134b9d31679300d2ba9d46cd2))
+* pause a race, resume it, restart it or end it ([c57643a](https://github.com/adumat/ippopeto/commit/c57643affb41f1ea40336d1e7e53ce48619351a8))
+
 ## [0.5.1](https://github.com/adumat/ippopeto/compare/v0.5.0...v0.5.1) (2026-10-26)
 
 
