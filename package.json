@@ -1,6 +1,6 @@
 {
   "name": "ippopeto",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "private": true,
   "description": "Cooperative browser party game: one raft, four hippos, gas-powered thrust.",
   "main": "server/index.js",
