@@ -34,8 +34,6 @@ The server SHALL answer `join` by these rules, in order:
 - during `countdown` or `running`, no new seat is given (`racing`); during `paused` seats are given as in the lobby;
 - with fewer than 6 seats taken or reserved, a seat is added with the first free colour; otherwise none (`full`).
 
-Outside `countdown` and `running`, the seat list SHALL drop empty seats and keep at least 2 entries after every change.
-
 #### Scenario: Renaming
 - **WHEN** a seated client sends `join` again with another name
 - **THEN** it keeps its seat under the new name
@@ -72,24 +70,28 @@ On connection the server SHALL send `{t:'hello', id, room, best}`, then a snapsh
 - **WHEN** a client connects without joining
 - **THEN** it still receives snapshots and can watch
 
+### Requirement: Seat list compaction
+
+Outside `countdown` and `running`, the seat list SHALL drop empty seats and keep at least 2 entries after every change.
+
+#### Scenario: Leaving the lobby
+- **WHEN** one of three seated players leaves in the lobby
+- **THEN** the next snapshot's seat list has two entries
+
 ### Requirement: Snapshot format
 
 A snapshot SHALL be `{t:'s', gt, st, tm, r, sy, cp, b, s, ev}`:
-- `gt` room time, which does not advance while paused; `st` one of `lobby`, `countdown`, `running`, `paused`, `finished`;
+- `gt` room time; `st` one of `lobby`, `countdown`, `running`, `paused`, `finished`;
 - `tm` countdown seconds left while counting down, race time otherwise;
 - `r` the raft as `[x, y, a, vx, vy]`;
 - `sy` 1 while the sync bonus is active; `cp` last checkpoint index, -1 for none; `b` bites;
 - `s` the seats.
 
-Positions SHALL be rounded to 0.1, angles and `gt` to 0.001. Snapshots SHALL keep flowing at 20 Hz while paused.
+Positions SHALL be rounded to 0.1, angles and `gt` to 0.001.
 
 #### Scenario: Snapshot size
 - **WHEN** six hippos are seated and no events fire
 - **THEN** a snapshot is a few hundred bytes
-
-#### Scenario: Paused room
-- **WHEN** the room is paused
-- **THEN** every snapshot carries `st:'paused'` and the same `gt`
 
 ### Requirement: Seat entries
 
@@ -151,3 +153,11 @@ The server SHALL accept these messages from seated clients only, and ignore them
 #### Scenario: Standing up during a pause
 - **WHEN** a seated client sends `{t:'leave'}` while paused
 - **THEN** it becomes a spectator and the seat list shrinks
+
+### Requirement: Snapshots while paused
+
+While paused, `gt` SHALL NOT advance, and snapshots SHALL keep flowing at 20 Hz.
+
+#### Scenario: Paused room
+- **WHEN** the room is paused
+- **THEN** every snapshot carries `st:'paused'` and the same `gt`
