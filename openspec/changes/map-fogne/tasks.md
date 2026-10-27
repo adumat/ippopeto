@@ -9,4 +9,4 @@
 ## 2. Client
 
 - [x] 2.1 Draw the Fogne: bricks, grates, pipes with drip and jet, intakes, clouds, ducks, rats, green splashes on `jet`. Verify an e2e race on the Fogne with no console errors
-- [ ] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves
+- [x] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves

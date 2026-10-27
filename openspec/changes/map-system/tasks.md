@@ -15,7 +15,7 @@
 
 - [x] 3.1 Move the Fiume drawing into `public/draw/fiume.js` and rebuild the course on `mp`/`sd` change. Verify the e2e race flow passes unchanged
 - [x] 3.2 Add the map name, thumbnail and selector to the lobby and results cards, disabled for spectators. Verify an e2e: one browser picks a map, the other sees it; spectators get disabled buttons
-- [ ] 3.3 Send the owner screenshots of the selector on desktop and phone. Verify the owner approves
+- [x] 3.3 Send the owner screenshots of the selector on desktop and phone. Verify the owner approves
 
 ## 4. Verification
 
