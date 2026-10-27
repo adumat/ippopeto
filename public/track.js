@@ -5,7 +5,7 @@
   'use strict';
 
   // Maps in the order the selector lists them. A map is listed only once it is playable.
-  const ORDER = ['fiume', 'fogne'];
+  const ORDER = ['fiume', 'fogne', 'fiordo'];
   const isNode = typeof module !== 'undefined' && module.exports;
   const extra = {};
   const defOf = (id) => extra[id] || (isNode ? require(`./maps/${id}.js`) : (root.IppoMaps || {})[id]);
@@ -16,6 +16,7 @@
   }
 
   const SUB = 12;
+  const BEAR_WARN = 1, BEAR_SPEED = 900;
 
   // mulberry32: generated maps must never use Math.random, or client and server disagree
   function rng(seed) {
@@ -153,6 +154,42 @@
       return { x, y, r };
     });
 
+    // Tilted stretches. (ax, ay) is the slope's pull at the stretch's start, along the course.
+    const SLOPE_DIRS = { back: [-1, 0], forward: [1, 0], left: [0, -1], right: [0, 1] };
+    const SLOPES = (obs.slopes || []).map(([u0, u1, dir, acc]) => ({ s0: u0 * LENGTH, s1: u1 * LENGTH, dir, acc, along: SLOPE_DIRS[dir][0], across: SLOPE_DIRS[dir][1] }));
+    // Thin ice: tiles of about 100 px along the course, three across.
+    const TILE_LEN = 100;
+    const TILES = [];
+    for (const [u0, u1] of obs.thin || []) {
+      for (let s = u0 * LENGTH + TILE_LEN / 2; s < u1 * LENGTH; s += TILE_LEN) {
+        const p = pointAt(s);
+        for (const k of [-1, 0, 1]) {
+          const lat = (k * 2 * p.hw) / 3;
+          TILES.push({ s, lat, x: p.x + p.nx * lat, y: p.y + p.ny * lat, w: (2 * p.hw) / 3, len: TILE_LEN, a: Math.atan2(p.ty, p.tx) });
+        }
+      }
+    }
+    // Polar bears sit on the snow beside the course.
+    const BEARS = (obs.bears || []).map(([u, side]) => {
+      const p = pointAt(u * LENGTH);
+      const d = p.hw + 90;
+      return { s: p.s, side, x: p.x + p.nx * side * d, y: p.y + p.ny * side * d, hw: p.hw };
+    });
+    // A bear charges in a straight line through a target point, out to the far side. It shows that line for BEAR_WARN s, then runs at BEAR_SPEED px/s and is gone
+    // (null) at the end of it.
+    function bearLine(b, tx, ty) {
+      const dx = tx - b.x, dy = ty - b.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const len = d + b.hw + 200;
+      return { ex: b.x + (dx / d) * len, ey: b.y + (dy / d) * len, len };
+    }
+    function bearAt(b, line, t) {
+      if (t < BEAR_WARN) return { x: b.x, y: b.y, warn: true };
+      const d = (t - BEAR_WARN) * BEAR_SPEED;
+      if (d > line.len) return null;
+      return { x: b.x + ((line.ex - b.x) * d) / line.len, y: b.y + ((line.ey - b.y) * d) / line.len, warn: false };
+    }
+
     const barrels = obs.barrels || [], crocs = obs.crocs || [];
     return {
       id: def.id,
@@ -174,6 +211,11 @@
         const { x, y } = place(u, off);
         return { x, y, r, k };
       }),
+      SLOPES,
+      TILES,
+      BEARS,
+      bearLine,
+      bearAt,
       JETS,
       jetState,
       INTAKES,

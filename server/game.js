@@ -15,6 +15,8 @@ const GAS_REGEN = 16;
 const GAS_RECOVER = 35; // once empty, gas must refill to this before pushing again
 const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
+// How each vehicle turns for the same push, relative to the raft
+const VEHICLES = { raft: { turn: 1 }, sled: { turn: 0.5 } };
 const COUNTDOWN = 3;
 // Peto vestito: pushing below SHART_GAS risks soiling yourself at SHART_RATE per second
 // times (1 - gas/SHART_GAS)^2. Forcing a full drain to zero gives ~35 %, stopping at 15 ~3 %.
@@ -61,6 +63,7 @@ class Room {
     const C = this.course;
     const p = C.pointAt(C.START_S);
     this.raft = { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 };
+    for (const r of this.rules) if (r.onRespawn) r.onRespawn(this);
     this.lastCp = -1;
     this.bites = 0; // every send-back during the race, whatever its cause
     this.backs = {}; // cause -> count, worded by the map in the results
@@ -289,6 +292,7 @@ class Room {
     const min = Track.RAFT_R + cr;
     if (d >= min || d === 0) return false;
     const nx = dx / d, ny = dy / d;
+    this.contactAt = this.gt;
     R.x += nx * (min - d);
     R.y += ny * (min - d);
     const vn = R.vx * nx + R.vy * ny;
@@ -401,9 +405,11 @@ class Room {
       }
     }
 
-    R.vx += (fx / MASS - surface.drag * (R.vx - wx)) * dt;
-    R.vy += (fy / MASS - surface.drag * (R.vy - wy)) * dt;
-    R.w += (torque / INERTIA - ANG_DRAG * R.w + spin) * dt;
+    const drag = surface.drag + surface.over * Math.max(0, Math.hypot(R.vx - wx, R.vy - wy) - surface.cruise);
+    R.vx += (fx / MASS - drag * (R.vx - wx)) * dt;
+    R.vy += (fy / MASS - drag * (R.vy - wy)) * dt;
+    const turn = (VEHICLES[C.def.vehicle] || VEHICLES.raft).turn;
+    R.w += ((turn * torque) / INERTIA - ANG_DRAG * R.w + spin) * dt;
     R.x += R.vx * dt;
     R.y += R.vy * dt;
     R.a += R.w * dt;
@@ -411,9 +417,9 @@ class Room {
     if (R.a < -Math.PI) R.a += 2 * Math.PI;
     for (const r of this.rules) if (r.force) r.force(this, dt);
 
-    // banks
+    // banks; a map with snow banks lets its own rule catch the vehicle instead
     const c2 = C.closest(R.x, R.y);
-    const limit = c2.hw - Track.RAFT_R;
+    const limit = c2.hw - (C.def.banks === 'snow' ? 0 : Track.RAFT_R);
     if (c2.dist > limit && c2.dist > 0) {
       const nx = (R.x - c2.cx) / c2.dist, ny = (R.y - c2.cy) / c2.dist;
       R.x -= nx * (c2.dist - limit);
@@ -469,6 +475,8 @@ class Room {
   flush() {
     if (this.tick % SNAPSHOT_EVERY !== 0) return;
     const R = this.raft;
+    const extra = {};
+    for (const r of this.rules) if (r.snapshot) Object.assign(extra, r.snapshot(this));
     const msg = JSON.stringify({
       t: 's',
       gt: r3(this.gt),
@@ -481,6 +489,7 @@ class Room {
       sd: this.seed,
       b: this.bites,
       s: this.seats.map((s) => (s ? [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0, s.away ? 1 : 0, s.colour] : null)),
+      ...extra,
       ev: this.events,
     });
     this.events = [];

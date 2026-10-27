@@ -419,6 +419,25 @@
         thud(0.6);
         shake = Math.max(shake, 10);
         break;
+      case 'stuck':
+        toast('Incagliati! Spingete tutti insieme, poi mollate: tre colpi', 2600);
+        thud(0.7);
+        break;
+      case 'stroke':
+        toast(`Colpo ${ev.n} di 3`, 1200);
+        blip(330 + ev.n * 110, 0.12, 'triangle', 0.2);
+        break;
+      case 'free':
+        toast('Liberi!', 1400);
+        break;
+      case 'fall':
+        toast('Splash! Il ghiaccio ha ceduto: si torna all’ultimo checkpoint', 2400);
+        thud(1);
+        shake = 18;
+        break;
+      case 'bear':
+        blip(196, 0.25, 'sawtooth', 0.18);
+        break;
       case 'bite':
         toast('Gnam! Si torna all’ultimo checkpoint', 2200);
         chomp();
@@ -776,7 +795,7 @@
     const vw = cw / zoom / 2 + 120, vh = ch / zoom / 2 + 120;
     const inView = (x, y) => Math.abs(x - cam.x) < vw && Math.abs(y - cam.y) < vh;
 
-    const view = { course, rg, inView, cam, vw, vh };
+    const view = { course, rg, inView, cam, vw, vh, snap: latest };
     painter.ground(ctx, world, view);
 
     // lines: start, checkpoints, finish
@@ -834,6 +853,8 @@
     });
     while (particles.length > 700) particles.shift();
 
+    if (course.def.vehicle === 'sled') drawGrooves(raft);
+    else grooves.length = 0;
     drawRaft(raft, seats);
 
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -908,7 +929,32 @@
     // shadow
     ctx.fillStyle = 'rgba(31,43,46,0.25)';
     ctx.fillRect(-h + 8, -h + 10, S, S);
-    // logs
+    if (course.def.vehicle === 'sled') drawSled(S, h);
+    else drawLogs(S, h);
+
+    const seatPos = T.seatPositions(seats.length);
+    const crowded = seats.length >= 5;
+    seats.forEach((s, i) => {
+      const [lx, ly] = seatPos[i];
+      ctx.save();
+      ctx.translate(lx, ly);
+      if (!s) {
+        ctx.setLineDash([6, 6]);
+        ctx.strokeStyle = 'rgba(255,248,225,0.7)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        drawHippo(s, COLORS[s.colour], s.id === myId, crowded);
+      }
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+
+  function drawLogs(S, h) {
     const n = 5, w = S / n;
     for (let i = 0; i < n; i++) {
       ctx.fillStyle = i % 2 ? WOOD : WOOD_DARK;
@@ -936,27 +982,63 @@
     ctx.lineTo(10, -h - 6);
     ctx.closePath();
     ctx.fill();
+  }
 
-    const seatPos = T.seatPositions(seats.length);
-    const crowded = seats.length >= 5;
-    seats.forEach((s, i) => {
-      const [lx, ly] = seatPos[i];
-      ctx.save();
-      ctx.translate(lx, ly);
-      if (!s) {
-        ctx.setLineDash([6, 6]);
-        ctx.strokeStyle = 'rgba(255,248,225,0.7)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      } else {
-        drawHippo(s, COLORS[s.colour], s.id === myId, crowded);
-      }
-      ctx.restore();
-    });
-    ctx.restore();
+  // the Fiordo's sled: planks across, two metal runners curling up at the bow, a red nose
+  function drawSled(S, h) {
+    ctx.strokeStyle = '#3d4a52';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(s * (h + 4), h + 8);
+      ctx.lineTo(s * (h + 4), -h - 8);
+      ctx.quadraticCurveTo(s * (h + 4), -h - 24, s * (h - 10), -h - 20);
+      ctx.stroke();
+    }
+    const w = S / 5;
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = i % 2 ? WOOD : WOOD_DARK;
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(-h - 2, -h + i * w + 1, S + 4, w - 2, 6);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#c0392b';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-h + 6, -h - 14);
+    ctx.quadraticCurveTo(0, -h - 30, h - 6, -h - 14);
+    ctx.lineTo(h - 6, -h - 2);
+    ctx.lineTo(-h + 6, -h - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // grooves left by the sled's runners on the ice
+  const grooves = [];
+  function drawGrooves(raft) {
+    const last = grooves[grooves.length - 1];
+    const moved = last ? Math.hypot(raft.x - last.x, raft.y - last.y) : Infinity;
+    if (moved > 300) grooves.length = 0; // sent back: the old track is elsewhere
+    if (moved > 12) grooves.push({ x: raft.x, y: raft.y, a: raft.a });
+    if (grooves.length > 90) grooves.shift();
+    ctx.strokeStyle = 'rgba(95,157,183,0.55)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      grooves.forEach((g, i) => {
+        const x = g.x + Math.cos(g.a) * side * 64, y = g.y + Math.sin(g.a) * side * 64;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
   }
 
   // The hippo faces where it pushes: the rear points along aim, the snout the other way

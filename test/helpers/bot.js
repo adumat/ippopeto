@@ -3,6 +3,7 @@
 // centre line and dodges the first obstacle within 550 px. The ~120 s difficulty target
 // was calibrated against exactly this logic, so keep it unchanged.
 const { Room } = require('../../server/game.js');
+const Track = require('../../public/track.js');
 const { seeded } = require('./rng.js');
 
 function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiume' }) {
@@ -26,7 +27,8 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
   while (room.status !== 'finished' && steps < 60 * maxSeconds) {
     const R = room.raft;
     const c = T.closest(R.x, R.y);
-    const tp = T.pointAt(c.s + 300);
+    // a map may ask for a longer look-ahead (a sled must set up its bends early)
+    const tp = T.pointAt(c.s + ((T.def.bot && T.def.bot.lookAhead) || 300));
     let off = 0;
     const obs = [...T.ROCKS, ...T.barrelsAt(room.gt), ...T.crocsAt(room.gt)];
     for (const o of obs) {
@@ -51,11 +53,25 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
       if (minGas < 5) fartOn = false;
       if (minGas > 60) fartOn = true;
     }
-    for (const s of room.seats) {
-      if (!s) continue;
-      s.aim = Math.atan2(-ly, -lx);
-      s.fartHeld = smart ? fartOn : true;
-    }
+    // stuck in snow, the crew pushes in strokes: all together, then all letting go
+    const stroking = room.snow && room.snow.stuck;
+    // A sled cannot slide sideways, and equal pushes cancel each other's turn: to turn, only
+    // the hippos on the outside of the turn push, all straight back.
+    const sled = T.def.vehicle === 'sled';
+    const err = Math.atan2(lx, -ly);
+    const seatPos = Track.seatPositions(room.seats.length);
+    room.seats.forEach((s, i) => {
+      if (!s) return;
+      const pushing = stroking ? steps % 30 < 15 : smart ? fartOn : true;
+      if (sled && !stroking) {
+        s.aim = Math.PI / 2;
+        const x = seatPos[i][0];
+        s.fartHeld = pushing && (Math.abs(err) < 0.12 || (err > 0 ? x < 0 : x > 0));
+      } else {
+        s.aim = Math.atan2(-ly, -lx);
+        s.fartHeld = pushing;
+      }
+    });
     room.step(1 / 60);
     steps++;
   }
