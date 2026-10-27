@@ -23,12 +23,17 @@ test('touch buttons steer and push', async ({ page }) => {
   await expect(page.locator('#touch')).toBeVisible();
 
   const aim = () => mySeat(frames).at(-1)?.[2];
+  // aim wraps at ±π, and a busy machine can hold a button longer than asked: compare turns
+  const turned = (from) => () => {
+    const a = aim();
+    return a === undefined ? 0 : Math.atan2(Math.sin(a - from), Math.cos(a - from));
+  };
   await expect.poll(aim).toBeCloseTo(Math.PI / 2, 2);
   await hold(page, 'right', 400);
-  await expect.poll(aim).toBeGreaterThan(Math.PI / 2 + 0.5);
+  await expect.poll(turned(Math.PI / 2)).toBeGreaterThan(0.5);
   const afterRight = aim();
   await hold(page, 'left', 400);
-  await expect.poll(aim).toBeLessThan(afterRight - 0.5);
+  await expect.poll(turned(afterRight)).toBeLessThan(-0.5);
 
   const before = mySeat(frames).length;
   await hold(page, 'fart', 500);
