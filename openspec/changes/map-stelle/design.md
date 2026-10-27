@@ -6,7 +6,7 @@ Builds on `map-system`. Draft art is in the artifact "Mappe di Ippopeto", Stelle
 
 ## Decisions
 
-**Height is a separate coordinate.** While airborne the room integrates `z` with a fixed take-off speed proportional to ground speed and constant gravity; thrust, turning and collisions are skipped until `z` returns to 0. Landing tests the surface under the centre.
+**Flight is a timed state, not a physics axis.** Crossing a ramp at 260 px/s or more sets `room.air` with an airtime long enough to land 150 px past the hole (0.6–1.5 s); `game.js` skips thrust, drag, edges and obstacles while it is set, so the saucer keeps its momentum. The snapshot's `z` is a parabola over that airtime, for drawing only. Landing is checked by the `void` rule like any other position. A first version derived airtime from speed alone and, at jump speed, landed inside the 190 px hole.
 
 **Void is a surface with no support.** The `force` hook of `void.js` triggers the fall when the centre is over void and `z = 0`; holes are void stretches.
 
@@ -16,5 +16,6 @@ Builds on `map-system`. Draft art is in the artifact "Mappe di Ippopeto", Stelle
 
 ## Risks / Trade-offs
 
-- [The bot cannot judge ramps] → A bot hint in the Stelle module makes it push all together from a set distance before every ramp; tuned with the 2-bot check.
+- [The bot cannot judge ramps or hairpins] → Bot hints in the Stelle module: push all together over the 700 px before a ramp, and stop pushing above 250 px/s before a sharp bend with no rails. Turbo pads sit on the straights leading to the ramps, not before hairpins, and comets on railed stretches: a comet knocking the saucer off an open edge looped crews on falls.
+- [With no current, a lone hippo also finishes (about 190 s)] → Accepted for this map: the planets are the only pull, and the field test decides if more is needed.
 - [A fall right after a checkpoint feels harsh] → Accepted by the owner (checkpoint chosen over "just before the fall").
