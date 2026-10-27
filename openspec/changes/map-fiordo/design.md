@@ -6,7 +6,9 @@ Builds on `map-system`. Draft art for every object is in the artifact "Mappe di 
 
 ## Decisions
 
-**Sled handling is a vehicle rule, not a surface.** On ice the velocity is split along and across the runners; the across component is removed each step (strong lateral grip), the along component decays with a tenth of the water drag. Angular response is halved by doubling angular drag for the sled. On snow the sled is pinned until freed.
+**Sled handling is a vehicle rule plus the ice surface.** The `sled` rule removes velocity across the runners each step, except for 0.4 s after a collision so the sled glances off obstacles. The ice surface has a tenth of the water drag below a 220 px/s cruise speed and a steep extra drag above it: tuning showed that with linear drag alone the sled reached 1000+ px/s, and a speed-squared drag braked harder than water at ordinary speeds, which killed the coasting feel. The `turn` factor of the sled vehicle halves torque. On snow the sled is pinned until freed.
+
+**The bot steers a sled from one side.** Equal pushes cancel torque, so the reference bot, which aims every hippo the same way, could not turn a sled at all. For sleds only, the bot pushes straight back with the hippos on the outside of the turn; its Fiume steering is unchanged.
 
 **Strokes are detected from the seat inputs.** A stroke is a rising edge where every present hippo pushes within 0.25 s of each other, followed by all releasing. Each stroke moves the sled one third of the way to the nearest ice point.
 
@@ -16,5 +18,6 @@ Builds on `map-system`. Draft art for every object is in the artifact "Mappe di 
 
 ## Risks / Trade-offs
 
-- [No lateral slip makes the sled feel on rails] → Keep a small residual slip (5 %) as a tuning knob, default off.
-- [Bots cannot plan wide bends] → The Fiordo module gives the bot a longer look-ahead as a bot hint; tune before softening the map.
+- [Steering from one side is hard for people] → Field test; the turn factor and the cruise speed are the knobs.
+- [Bots cannot plan wide bends] → The Fiordo module gives the bot a longer look-ahead (450 px) as a bot hint; tune before softening the map.
+- [A send-back lands the sled straight onto a hazard and loops] → Thin-ice bridges and bears sit at least 400 px after a checkpoint, and ice blocks away from bridges.

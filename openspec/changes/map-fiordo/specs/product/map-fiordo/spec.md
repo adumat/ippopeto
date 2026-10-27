@@ -12,19 +12,27 @@
 
 ### Requirement: Sled on ice
 
-On ice, friction along the runners SHALL be a tenth of the water drag, so a push keeps the sled moving until someone pushes against it. The sled SHALL NOT slide sideways: its velocity SHALL follow the direction it points. It SHALL turn at about half the raft's rate for the same push. Taking a tight bend fast SHALL therefore carry it wide.
-
-#### Scenario: Tight bend at speed
-- **WHEN** the crew enters a right-angle bend at full speed and turns as hard as it can
-- **THEN** the sled swings wide and runs into the snow on the outside
+On ice, below a cruise speed of 220 px/s, friction SHALL be a tenth of the water drag, so a push keeps the sled moving until someone pushes against it. Above that speed drag SHALL grow steeply, so the sled never runs much faster than a raft.
 
 #### Scenario: Coasting
 - **WHEN** the crew stops pushing on flat ice
 - **THEN** the sled keeps sliding forward for a long way
 
+### Requirement: The sled follows its runners
+
+The sled SHALL NOT slide sideways: its velocity SHALL follow the direction it points, except for 0.4 s after hitting an obstacle, so it glances off instead of wedging. It SHALL turn at about half the raft's rate for the same push. Equal pushes cancel each other's turn, so the crew turns by pushing from one side, and a tight bend taken fast carries the sled wide.
+
+#### Scenario: Tight bend at speed
+- **WHEN** the crew enters a right-angle bend at full speed and turns as hard as it can
+- **THEN** the sled swings wide and runs into the snow on the outside
+
+#### Scenario: Turning
+- **WHEN** only the hippos on the left side push
+- **THEN** the sled turns right
+
 ### Requirement: Slopes
 
-Stretches of the course SHALL be tilted, pushing the sled backwards, forwards or sideways with a constant force. There SHALL be no current. Slopes SHALL be drawn so the crew can read their direction.
+The whole fjord SHALL climb gently towards the finish, pulling the sled back at 20 px/s², and some stretches SHALL be tilted more, backwards, forwards or sideways, with their own constant force; a sideways slope swings the sled's nose downhill. There SHALL be no current. Slopes SHALL be drawn so the crew can read their direction.
 
 #### Scenario: Uphill
 - **WHEN** nobody pushes on a backward slope
@@ -32,7 +40,7 @@ Stretches of the course SHALL be tilted, pushing the sled backwards, forwards or
 
 ### Requirement: Stuck in the snow
 
-A sled entering the snow SHALL stop and SHALL NOT respond to normal pushes. It SHALL come free with three strokes within 5 s: a stroke is every present hippo pushing at once, then all releasing. Each stroke SHALL move the sled a little towards the ice; after the third it SHALL be back on the ice. If the 5 s run out, the count SHALL start again.
+A sled entering the snow SHALL stop and SHALL NOT respond to normal pushes. It SHALL come free with three strokes within 5 s: a stroke is every present hippo pushing at once, then all releasing. Each stroke SHALL move the sled a third of the way back onto the ice; after the third it SHALL be on the ice, facing down the course. If the 5 s run out, the count SHALL start again.
 
 #### Scenario: Out in three strokes
 - **WHEN** a stuck crew pushes together, releases, three times within 5 s
