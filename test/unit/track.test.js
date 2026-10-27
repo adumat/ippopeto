@@ -9,7 +9,7 @@ const CLUSTER_S = 150;
 
 function solidsAt(T, t) {
   const label = (kind) => (o, i) => ({ ...o, name: `${kind} #${i}` });
-  return [...T.ROCKS.map(label('rock')), ...T.barrelsAt(t).map(label('barrel')), ...T.crocsAt(t).map(label('crocodile')), ...T.batsAt(t).map(label('bats'))].map((o) => {
+  return [...T.ROCKS.map(label('rock')), ...T.barrelsAt(t).map(label('barrel')), ...T.crocsAt(t).map(label('crocodile')), ...T.batsAt(t).map(label('bats')), ...T.cometsAt(t).map(label('comet'))].map((o) => {
     const c = T.closest(o.x, o.y);
     const lat = (o.x - c.cx) * -c.ty + (o.y - c.cy) * c.tx;
     return { name: o.name, s: c.s, lo: lat - o.r, hi: lat + o.r };

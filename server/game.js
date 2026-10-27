@@ -16,7 +16,7 @@ const GAS_RECOVER = 35; // once empty, gas must refill to this before pushing ag
 const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
 // How each vehicle turns for the same push, relative to the raft
-const VEHICLES = { raft: { turn: 1 }, stone: { turn: 1 }, sled: { turn: 0.5 } };
+const VEHICLES = { raft: { turn: 1 }, stone: { turn: 1 }, sled: { turn: 0.5 }, ufo: { turn: 1 } };
 const COUNTDOWN = 3;
 // Peto vestito: pushing below SHART_GAS risks soiling yourself at SHART_RATE per second
 // times (1 - gas/SHART_GAS)^2. Forcing a full drain to zero gives ~35 %, stopping at 15 ~3 %.
@@ -308,6 +308,17 @@ class Room {
     return true;
   }
 
+  collideObstacles(C, R) {
+    for (const r of C.ROCKS) this.collideCircle(r.x, r.y, r.r);
+    for (const b of C.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
+    for (const cr of C.crocsAt(this.gt)) {
+      if (Math.hypot(R.x - cr.x, R.y - cr.y) < Track.RAFT_R + cr.r - 10) {
+        this.sendBack(C.def.biter || 'croc', { k: 'bite' });
+        return;
+      }
+    }
+  }
+
   step(dt) {
     this.tick++;
     if (this.status === 'paused') {
@@ -371,14 +382,16 @@ class Room {
       return;
     }
 
-    // thrust
+    // thrust; a vehicle in the air (`this.air`, set by a rule) ignores pushes, keeps its
+    // momentum and touches nothing until it lands
+    const flying = !!this.air;
     const cos = Math.cos(R.a), sin = Math.sin(R.a);
     let fx = 0, fy = 0, torque = 0;
     // total thrust grows with the square root of the crew: 4 hippos push as they always did
     const force = FART_FORCE * Math.sqrt(4 / this.seats.length) * (this.sync ? SYNC_MULT : 1);
     const positions = Track.seatPositions(this.seats.length);
     this.seats.forEach((s, i) => {
-      if (!s || !s.farting) return;
+      if (!s || !s.farting || flying) return;
       let mult = 1;
       for (const r of this.rules) if (r.thrust) mult *= r.thrust(this, s, i);
       // the rear points along aim, thrust goes the opposite way
@@ -408,7 +421,7 @@ class Room {
       }
     }
 
-    const drag = surface.drag + surface.over * Math.max(0, Math.hypot(R.vx - wx, R.vy - wy) - surface.cruise);
+    const drag = flying ? 0 : surface.drag + surface.over * Math.max(0, Math.hypot(R.vx - wx, R.vy - wy) - surface.cruise);
     R.vx += (fx / MASS - drag * (R.vx - wx)) * dt;
     R.vy += (fy / MASS - drag * (R.vy - wy)) * dt;
     const turn = (VEHICLES[C.def.vehicle] || VEHICLES.raft).turn;
@@ -420,10 +433,12 @@ class Room {
     if (R.a < -Math.PI) R.a += 2 * Math.PI;
     for (const r of this.rules) if (r.force) r.force(this, dt);
 
-    // banks; a map with snow banks lets its own rule catch the vehicle instead
+    // banks; a map with snow banks lets its own rule catch the vehicle instead, and open
+    // edges over the void bounce only where they have rails
     const c2 = C.closest(R.x, R.y);
     const limit = c2.hw - (C.def.banks === 'snow' ? 0 : Track.RAFT_R);
-    if (c2.dist > limit && c2.dist > 0) {
+    const solidEdge = !flying && (C.def.banks !== 'void' || C.railedAt(c2.s));
+    if (solidEdge && c2.dist > limit && c2.dist > 0) {
       const nx = (R.x - c2.cx) / c2.dist, ny = (R.y - c2.cy) / c2.dist;
       R.x -= nx * (c2.dist - limit);
       R.y -= ny * (c2.dist - limit);
@@ -439,14 +454,7 @@ class Room {
     }
 
     // obstacles
-    for (const r of C.ROCKS) this.collideCircle(r.x, r.y, r.r);
-    for (const b of C.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
-    for (const cr of C.crocsAt(this.gt)) {
-      if (Math.hypot(R.x - cr.x, R.y - cr.y) < Track.RAFT_R + cr.r - 10) {
-        this.sendBack(C.def.biter || 'croc', { k: 'bite' });
-        break;
-      }
-    }
+    if (!flying) this.collideObstacles(C, R);
     for (const r of this.rules) if (r.collide) r.collide(this);
 
     // checkpoints and finish

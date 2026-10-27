@@ -8,6 +8,7 @@ const SURFACES = {
   water: { drag: 1.1, current: 1, cruise: Infinity, over: 0 },
   lava: { drag: 1.1, current: 1, cruise: Infinity, over: 0 },
   ice: { drag: 0.11, current: 0, cruise: 220, over: 0.01 },
+  space: { drag: 1.1, current: 0, cruise: Infinity, over: 0 },
 };
 
 module.exports = { SURFACES };

@@ -20,6 +20,11 @@ const RULES = {
   bombs: require('./bombs.js'),
   heat: require('./heat.js'),
   bats: require('./bats.js'),
+  jumps: require('./jumps.js'),
+  void: require('./void.js'),
+  turbo: require('./turbo.js'),
+  gravity: require('./gravity.js'),
+  comets: require('./comets.js'),
 };
 
 function rulesFor(def) {

@@ -32,7 +32,7 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
     let off = 0;
     // a bomb whose shadow is showing is dodged like any obstacle
     const bombs = (T.BOMBS || []).filter((b) => T.bombState(b, room.gt).left < T.BOMB_WARN).map((b) => ({ x: b.x, y: b.y, r: 60 }));
-    const obs = [...T.ROCKS, ...T.barrelsAt(room.gt), ...T.crocsAt(room.gt), ...T.batsAt(room.gt), ...bombs];
+    const obs = [...T.ROCKS, ...T.barrelsAt(room.gt), ...T.crocsAt(room.gt), ...T.batsAt(room.gt), ...T.cometsAt(room.gt), ...bombs];
     for (const o of obs) {
       const oc = T.closest(o.x, o.y);
       if (oc.s > c.s - 50 && oc.s < c.s + 550) {
@@ -57,6 +57,16 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
     }
     // stuck in snow, the crew pushes in strokes: all together, then all letting go
     const stroking = room.snow && room.snow.stuck;
+    // Map hints for the Stelle: ease off before a sharp bend with no rails, and push all
+    // together on the run-up to a ramp.
+    const hint = T.def.bot || {};
+    let override = null;
+    if (hint.brakeBends) {
+      const ahead = T.pointAt(c.s + 450);
+      const turn = Math.abs(Math.atan2(c.tx * ahead.ty - c.ty * ahead.tx, c.tx * ahead.tx + c.ty * ahead.ty));
+      if (turn > 1 && Math.hypot(R.vx, R.vy) > hint.brakeBends && !T.railedAt(c.s)) override = false;
+    }
+    if (hint.rampRunUp && T.HOLES.some((h) => c.s > h.r0 - hint.rampRunUp && c.s < h.s0)) override = true;
     // A sled cannot slide sideways, and equal pushes cancel each other's turn: to turn, only
     // the hippos on the outside of the turn push, all straight back.
     const sled = T.def.vehicle === 'sled';
@@ -64,7 +74,7 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
     const seatPos = Track.seatPositions(room.seats.length);
     room.seats.forEach((s, i) => {
       if (!s) return;
-      const pushing = stroking ? steps % 30 < 15 : smart ? fartOn : true;
+      const pushing = stroking ? steps % 30 < 15 : override !== null ? override : smart ? fartOn : true;
       if (sled && !stroking) {
         s.aim = Math.PI / 2;
         const x = seatPos[i][0];

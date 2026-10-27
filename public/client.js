@@ -450,6 +450,17 @@
         thud(1);
         shake = 22;
         break;
+      case 'void':
+        toast('Caduti nel vuoto! Si torna all’ultimo checkpoint', 2400);
+        fallFx = { x: ev.x, y: ev.y, a: ev.a, t: performance.now() / 1000 };
+        blip(520, 0.5, 'sine', 0.2);
+        break;
+      case 'jump':
+        blip(660, 0.25, 'triangle', 0.2);
+        break;
+      case 'turbo':
+        blip(880, 0.15, 'square', 0.12);
+        break;
       case 'bats':
         toast('Pipistrelli!', 1600);
         blindUntil = performance.now() / 1000 + 2;
@@ -791,6 +802,8 @@
         y: a.r[1] + (b.r[1] - a.r[1]) * f,
         a: a.r[2] + wrapA(b.r[2] - a.r[2]) * f,
         vx: b.r[3], vy: b.r[4],
+        // height above the track while a saucer is in the air
+        z: (a.z || 0) + ((b.z || 0) - (a.z || 0)) * f,
       };
       seats = b.s.map((s, i) => {
         if (!s) return null;
@@ -876,6 +889,7 @@
 
     if (course.def.vehicle === 'sled') drawGrooves(raft);
     else grooves.length = 0;
+    drawFall();
     drawRaft(raft, seats);
 
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -945,14 +959,27 @@
 
   function drawRaft(raft, seats) {
     const S = T.RAFT_SIZE, h = S / 2;
+    const ufo = course.def.vehicle === 'ufo';
+    const z = raft.z || 0;
+    if (ufo) {
+      // the saucer's shadow stays on the track; in the air it shrinks and drifts away
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.ellipse(raft.x + 8 + z * 0.4, raft.y + 10 + z * 0.4, (h + 16) * (1 - Math.min(0.4, z / 300)), (h + 16) * (1 - Math.min(0.4, z / 300)), 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.save();
     ctx.translate(raft.x, raft.y);
     ctx.rotate(raft.a);
-    // shadow
-    ctx.fillStyle = 'rgba(31,43,46,0.25)';
-    ctx.fillRect(-h + 8, -h + 10, S, S);
+    if (z > 0) ctx.scale(1 + z / 250, 1 + z / 250);
+    if (!ufo) {
+      // shadow
+      ctx.fillStyle = 'rgba(31,43,46,0.25)';
+      ctx.fillRect(-h + 8, -h + 10, S, S);
+    }
     if (course.def.vehicle === 'sled') drawSled(S, h);
     else if (course.def.vehicle === 'stone') drawStone(S, h);
+    else if (ufo) drawSaucer(h);
     else drawLogs(S, h);
 
     const seatPos = T.seatPositions(seats.length);
@@ -974,7 +1001,72 @@
       }
       ctx.restore();
     });
+    if (ufo) drawDome(h);
     ctx.restore();
+  }
+
+  // the Stelle's flying saucer: a disc with blinking lights round the rim, a glass dome on top
+  function drawSaucer(h) {
+    const now = performance.now() / 1000;
+    ctx.fillStyle = '#b9b4d6';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, h + 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#d9d6ee';
+    ctx.strokeStyle = '#8a84b5';
+    ctx.beginPath();
+    ctx.arc(0, 0, h + 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    for (let i = 0; i < 12; i++) {
+      const a = (Math.PI * 2 * i) / 12;
+      ctx.fillStyle = (Math.floor(now * 6) + i) % 3 === 0 ? '#ffd23f' : '#6b6496';
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * (h + 10), Math.sin(a) * (h + 10), 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = PAPER;
+    ctx.beginPath();
+    ctx.moveTo(0, -h - 14);
+    ctx.lineTo(-8, -h - 2);
+    ctx.lineTo(8, -h - 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawDome(h) {
+    ctx.fillStyle = 'rgba(170,220,255,0.18)';
+    ctx.beginPath();
+    ctx.arc(0, 0, h + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, h - 8, -2.6, -1.9);
+    ctx.stroke();
+  }
+
+  // a saucer that fell: it shrinks and spins away where it left the track
+  let fallFx = null;
+  function drawFall() {
+    if (!fallFx) return;
+    const t = performance.now() / 1000 - fallFx.t;
+    if (t > 0.8) {
+      fallFx = null;
+      return;
+    }
+    const k = 1 - t / 0.8;
+    ctx.save();
+    ctx.translate(fallFx.x, fallFx.y);
+    ctx.rotate(fallFx.a + t * 8);
+    ctx.scale(k, k);
+    ctx.globalAlpha = k;
+    drawSaucer(T.RAFT_SIZE / 2);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   function drawLogs(S, h) {

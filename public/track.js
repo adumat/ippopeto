@@ -5,7 +5,7 @@
   'use strict';
 
   // Maps in the order the selector lists them. A map is listed only once it is playable.
-  const ORDER = ['fiume', 'fogne', 'fiordo', 'lava', 'grotta'];
+  const ORDER = ['fiume', 'fogne', 'fiordo', 'lava', 'grotta', 'stelle'];
   const isNode = typeof module !== 'undefined' && module.exports;
   const extra = {};
   const defOf = (id) => extra[id] || (isNode ? require(`./maps/${id}.js`) : (root.IppoMaps || {})[id]);
@@ -18,6 +18,7 @@
   const SUB = 12;
   const BEAR_WARN = 1, BEAR_SPEED = 900;
   const GEYSER_BUILD = 0.6, GEYSER_ERUPT = 1, BOMB_WARN = 1.5;
+  const RAMP_LEN = 110;
 
   // mulberry32: generated maps must never use Math.random, or client and server disagree
   function rng(seed) {
@@ -242,7 +243,23 @@
       return { left: impact - t, n: k };
     };
 
-    const barrels = obs.barrels || [], crocs = obs.crocs || [], bats = obs.bats || [];
+    // Stretches with rails; elsewhere a map with `banks: 'void'` has open edges.
+    const RAILS = (obs.rails || []).map(([u0, u1]) => [u0 * LENGTH, u1 * LENGTH]);
+    const railedAt = (s) => RAILS.some(([s0, s1]) => s >= s0 && s < s1);
+    // Holes across the whole track, each with a ramp of RAMP_LEN px in front of it.
+    const HOLES = (obs.holes || []).map(([u0, u1]) => ({ r0: u0 * LENGTH - RAMP_LEN, s0: u0 * LENGTH, s1: u1 * LENGTH }));
+    const holeAt = (s) => HOLES.some((h) => s >= h.s0 && s < h.s1);
+    const TURBOS = (obs.turbos || []).map(([u, off]) => {
+      const { x, y, p } = place(u, off);
+      return { x, y, tx: p.tx, ty: p.ty };
+    });
+    const PLANETS = (obs.planets || []).map(([u, side, dist, r, reach, pull]) => {
+      const p = pointAt(u * LENGTH);
+      const d = p.hw + dist;
+      return { x: p.x + p.nx * side * d, y: p.y + p.ny * side * d, r, reach, pull };
+    });
+
+    const barrels = obs.barrels || [], crocs = obs.crocs || [], bats = obs.bats || [], comets = obs.comets || [];
     return {
       id: def.id,
       seed: def.generated ? seed : 0,
@@ -281,6 +298,13 @@
       barrelsAt: (t) => movers(barrels, t),
       crocsAt: (t) => movers(crocs, t),
       batsAt: (t) => movers(bats, t),
+      cometsAt: (t) => movers(comets, t),
+      RAILS,
+      railedAt,
+      HOLES,
+      holeAt,
+      TURBOS,
+      PLANETS,
       START_S: 220,
       CHECKPOINTS: [0.2, 0.4, 0.6, 0.8].map((u) => u * LENGTH),
       FINISH_S: LENGTH - 380,
