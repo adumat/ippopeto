@@ -12,7 +12,11 @@ Builds on `map-system`. Draft art for every object is in the artifact "Mappe di 
 
 **Heat is a gas hook** based on distance to the bank from `closest()`.
 
-**Salamanders reuse the crocodile mover** with a different painter.
+**Salamanders reuse the crocodile mover** with a different painter. Tuning made them slower (6 s) and with a shorter swim than the crocodiles: with the bombs nearby, two hippos otherwise looped on bites.
+
+**Burning is a thrust hook and a seat flag.** A `thrust(room, seat, i)` hook multiplies each pushing seat's force; a burning seat's snapshot entry gets a ninth field, `1`, only while alight, so other maps pay nothing.
+
+**The reference bot dodges a bomb whose shadow shows**, treating it as an obstacle; a person reads the shadow the same way.
 
 ## Risks / Trade-offs
 
