@@ -18,7 +18,7 @@ Each room SHALL keep, for each map, its five fastest finishes on that map, each 
 
 ### Requirement: Send-backs in the results
 
-Instead of a single bite count, the results card SHALL list each cause of being sent back to a checkpoint during the race, with the wording its map gives, singular or plural, and omit causes that did not happen. On the Fiume the only cause SHALL stay "morso di coccodrillo".
+Instead of a single bite count, the results card SHALL list every cause its map has for being sent back to a checkpoint, with the count for the race, zero included, in the wording the map gives, singular or plural. On the Fiume the only cause SHALL stay "morso di coccodrillo".
 
 #### Scenario: Clean race on the Fiume
 - **WHEN** a crew finishes the Fiume after two bites

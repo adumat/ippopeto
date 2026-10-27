@@ -28,6 +28,7 @@ The game has one river, and after a few evenings the crew knows it by heart. Fiv
 - `tech/architecture`: course definitions become per-map modules built by a shared engine.
 - `tech/protocol`: a map-choice message; snapshots carry the map and the seed.
 - `tech/verification`: course and difficulty checks run on every map.
+- `tech/server-runtime`: static files are served from subfolders too, and PNG thumbnails.
 
 ## Impact
 
