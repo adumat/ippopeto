@@ -2,9 +2,9 @@
 
 ## 1. Server
 
-- [ ] 1.1 Add the `paused` status and freeze `step()` while paused (no `gt`, physics or gas; `expireAway` and `flush` still run). Verify with a unit test: after 2 s paused, `gt`, raft position, gas and race time are unchanged and snapshots kept flowing
-- [ ] 1.2 Add `pause` (emits `pause{i}`), `resume`, `restart`, `stop` and `leave`, accepted from seated clients in the right states, and wire them in `server/index.js`. Verify with unit tests for each action, including that spectators and wrong states are ignored and that `stop` records no best time
-- [ ] 1.3 Verify that a spectator can join and a player can leave during a pause, the raft resizes, and resume continues from the same place. Verify with a unit test
+- [x] 1.1 Add the `paused` status and freeze `step()` while paused (no `gt`, physics or gas; `expireAway` and `flush` still run). Verify with a unit test: after 2 s paused, `gt`, raft position, gas and race time are unchanged and snapshots kept flowing
+- [x] 1.2 Add `pause` (emits `pause{i}`), `resume`, `restart`, `stop` and `leave`, accepted from seated clients in the right states, and wire them in `server/index.js`. Verify with unit tests for each action, including that spectators and wrong states are ignored and that `stop` records no best time
+- [x] 1.3 Verify that a spectator can join and a player can leave during a pause, the raft resizes, and resume continues from the same place. Verify with a unit test
 
 ## 2. Client
 

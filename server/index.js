@@ -123,7 +123,22 @@ function onConnection(ws, room) {
         room.input(client, msg);
         break;
       case 'start':
-        if (client.seat != null) room.start();
+        if (client.seat != null && (room.status === 'lobby' || room.status === 'finished')) room.start();
+        break;
+      case 'pause':
+        room.pause(client);
+        break;
+      case 'resume':
+        room.resume(client);
+        break;
+      case 'restart':
+        room.restart(client);
+        break;
+      case 'stop':
+        room.stop(client);
+        break;
+      case 'leave':
+        if (room.leave(client)) ws.send(JSON.stringify({ t: 'joined', seat: null }));
         break;
       case 'debug':
         if (DEBUG && client.seat != null && msg.op === 'teleport') room.teleport(msg.s);

@@ -171,6 +171,43 @@ class Room {
     s.fartHeld = !!msg.fart;
   }
 
+  seated(client) {
+    return this.seatIndexOf(client) !== -1;
+  }
+
+  // Pausing freezes the world; while paused the raft can be reshaped like in the lobby.
+  pause(client) {
+    if (!this.racing() || !this.seated(client)) return;
+    this.status = 'paused';
+    this.events.push({ k: 'pause', i: this.seatIndexOf(client) });
+  }
+
+  resume(client) {
+    if (this.status !== 'paused' || !this.seated(client)) return;
+    this.status = 'countdown';
+    this.countdown = COUNTDOWN;
+  }
+
+  restart(client) {
+    if (this.status === 'paused' && this.seated(client)) this.start();
+  }
+
+  stop(client) {
+    if (this.status !== 'paused' || !this.seated(client)) return;
+    this.resetRun();
+    this.status = 'lobby';
+    this.compact();
+  }
+
+  leave(client) {
+    const i = this.seatIndexOf(client);
+    if (this.racing() || i === -1) return false;
+    this.seats[i] = null;
+    this.compact();
+    client.seat = null;
+    return true;
+  }
+
   start() {
     if (this.status === 'countdown' || this.status === 'running') return;
     if (!this.seats.some(Boolean)) return;
@@ -226,8 +263,14 @@ class Room {
   }
 
   step(dt) {
-    this.gt += dt;
     this.tick++;
+    if (this.status === 'paused') {
+      // room time stands still, so moving obstacles freeze with everything else
+      this.expireAway();
+      this.flush();
+      return;
+    }
+    this.gt += dt;
 
     if (this.status === 'countdown') {
       this.countdown -= dt;
