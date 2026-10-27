@@ -11,7 +11,7 @@ The game is in Italian.
 - On phones, on-screen buttons appear.
 - Rocks and barrels bounce you, whirlpools drag you around, crocodiles send you back to the last checkpoint.
 - Forcing it on an almost empty tank risks a peto vestito: your tank empties, everyone's screen gets splattered, and it shows up in the results.
-- Four checkpoints; each room keeps its five best times for as long as it exists (in memory).
+- Any seated player picks the map in the lobby or on the results card. Every map has four checkpoints; each room keeps five best times per map for as long as it exists (in memory).
 
 ## Running locally
 
@@ -39,7 +39,7 @@ A refused WebSocket receives `{t:'denied', reason}` and a close code: `code` (40
 ## Architecture
 
 - `server/`: Node.js and [`ws`](https://github.com/websockets/ws). The server is authoritative: it simulates at 60 Hz and sends snapshots at 20 Hz. Clients send only their controls.
-- `public/`: static canvas client, no build step. `track.js` is shared by server and browser, so geometry and moving obstacles match on both sides.
+- `public/`: static canvas client, no build step. `track.js` builds a course from a map module in `public/maps/`; both are shared by server and browser, so geometry and moving obstacles match on both sides. Each map has a painter in `public/draw/` and a thumbnail in `public/maps/thumbs/`.
 - State lives in memory only: a restart ends running games, so run exactly one replica.
 
 Each client receives about 7–8 KB/s, so a full raft of six costs about 0.4 Mbit/s of upload.

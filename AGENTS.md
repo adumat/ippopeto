@@ -23,7 +23,7 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 ## Hard constraints
 
 - **No framework, no build step.** The client is vanilla JS on a 2D canvas. The server is plain Node 22 with `ws` pinned to an exact version as its only runtime dependency. A new runtime dependency needs the owner's approval.
-- **`public/track.js` is shared** by server (`require`) and browser (`window.Track`) through a minimal UMD wrapper. Geometry and moving obstacles must stay deterministic functions of room time, identical on both sides.
+- **`public/track.js` is shared** by server (`require`) and browser (`window.Track`) through a minimal UMD wrapper. Geometry and moving obstacles must stay deterministic functions of room time (and of the seed, for generated maps), identical on both sides. Generated maps use `Track.rng(seed)`, never `Math.random`.
 - **Authoritative server.** Clients send input only. State lives in memory: one replica, `Recreate`. No Redis or database without asking.
 - **Bandwidth.** About 7 KB/s per client. A change to snapshot content or rate states its cost in bytes per second.
 - **Course rule.** Every solid obstacle leaves a gap of at least 164 px (raft diameter + 20) on one side. Re-verify after any course edit.
@@ -31,6 +31,14 @@ When code and spec disagree, find out which one is wrong. Do not silently follow
 ## Peto vestito
 
 Pushing below `SHART_GAS` (25) risks soiling yourself at `SHART_RATE` (1.45/s) × (1 − gas/25)², sampled every step in `server/game.js`: about 35 % when forcing a full drain to zero, about 3 % when letting go at 15. It empties and locks the tank and emits `{k:'shart', i}`. These two constants are the tuning knobs; change them only with the owner, and keep the 2/4/6-bot difficulty tests green. `Room` takes an injectable `random` so tests stay reproducible.
+
+## Maps
+
+- A map is a module in `public/maps/<id>.js` (UMD, data only): `id`, `name`, `vehicle`, `control` points or, with `generated: true`, a `generate(rng)` returning them, `obstacles`, optional `surfaces` (`[[u0, u1, kind]]`, water elsewhere), `rules` (names in `server/rules/`), `causes` (send-back wording for the results) and `hint` (lobby text). List it in `ORDER` in `track.js` only once it is playable.
+- `Track.course(id, seed)` builds and caches a course with the API the server and the painter use (`pointAt`, `closest`, `CHECKPOINTS`, `FINISH_S`, obstacle lists and movers). The room holds `room.course`; snapshots carry `mp` and `sd`, and the client rebuilds on change.
+- Behaviour a map adds goes in a rule module (`server/rules/`) with the hooks listed in `server/rules/index.js`, not in branches inside `game.js`. Surfaces and their drag live in `server/rules/surfaces.js`.
+- Drawing goes in `public/draw/<id>.js`, registered on `window.IppoDraw[id]` with `background`, `build(course)`, `ground()` and `obstacles()`. Add its `<script>` tags to `index.html` and a 320×150 thumbnail to `public/maps/thumbs/`.
+- `test/unit/golden.test.js` pins the Fiume's bot runs: a map change must not move them.
 
 ## Seats and screens
 
@@ -84,7 +92,7 @@ Several tabs in the same room are several players. `PORT` and `MAX_ROOMS` are re
 ## Testing
 
 ```sh
-npm test               # unit: course gaps, centre line, 2/4/6-bot difficulty, seats, teleport
+npm test               # unit, on every map: course gaps, centre line, 2/4/6-bot difficulty; plus seats, teleport, Fiume golden run
 npx playwright install chromium   # once
 npm run e2e            # browsers: full race to the results card, access code, touch
 ```
