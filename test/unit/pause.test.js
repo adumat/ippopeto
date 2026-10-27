@@ -76,7 +76,7 @@ test('restart begins a new race and stop returns to the lobby with no result', (
   room.pause(clients[0]);
   room.stop(clients[0]);
   assert.strictEqual(room.status, 'lobby');
-  assert.strictEqual(room.best.length, 0);
+  assert.strictEqual(room.bestOf(room.mapId).length, 0);
 });
 
 test('spectators and wrong states are ignored', () => {

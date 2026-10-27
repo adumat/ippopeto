@@ -1,6 +1,6 @@
 'use strict';
 const { test, expect } = require('@playwright/test');
-const T = require('../../public/track.js');
+const T = require('../../public/track.js').course('fiume');
 const { WsBot } = require('../helpers/wsbot.js');
 const { roomName, board } = require('./fixtures.js');
 

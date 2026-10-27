@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { Room } = require('../../server/game.js');
-const T = require('../../public/track.js');
+const T = require('../../public/track.js').course('fiume');
 
 test('teleporting through the checkpoints and past the finish ends the race', () => {
   const room = new Room('tp');

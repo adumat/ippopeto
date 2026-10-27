@@ -188,6 +188,16 @@ kbd {
 
 .big-time { font-family: var(--display); font-size: 64px; line-height: 1; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
 #best { padding-left: 1.4em; margin: 0 0 18px; }
+.maps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 16px; }
+.map {
+  font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.2;
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; padding: 4px; cursor: pointer;
+  display: grid; gap: 4px; text-align: center;
+}
+.map img { width: 100%; aspect-ratio: 32 / 15; object-fit: cover; border-radius: 7px; display: block; }
+.map[aria-pressed="true"] { background: var(--gas); box-shadow: 3px 3px 0 var(--ink); }
+.map:disabled { cursor: default; }
+.map:disabled:not([aria-pressed="true"]) { opacity: 0.6; }
 #best li { margin: 2px 0; }
 
 #touch {

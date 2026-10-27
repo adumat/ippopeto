@@ -1,9 +1,13 @@
 (() => {
   'use strict';
   const T = window.Track;
+  // the current map's course and its painter; rebuilt when a snapshot names another map or seed
+  let course = T.course(T.DEFAULT_MAP);
+  let painter = window.IppoDraw[course.id];
+  let world = painter.build(course);
   // indexed by the colour a player keeps for as long as they are seated
   const COLORS = ['#ff9f1c', '#e0479e', '#ffd23f', '#7b5cff', '#ef4b3f', '#8fd3ff'];
-  const INK = '#1f2b2e', WATER = '#3fa7b8', GRASS = '#7fa347', BUSH = '#5f8a35', SAND = '#efdda8';
+  const INK = '#1f2b2e', SAND = '#efdda8';
   // brown is reserved for the peto vestito
   const BROWN = '#6b4423', BROWN_LIGHT = '#8c5a2e';
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
@@ -111,6 +115,7 @@
       snaps.push(m);
       if (snaps.length > 40) snaps.shift();
       latest = m;
+      if (m.mp) useCourse(m.mp, m.sd || 0);
       for (const ev of m.ev) onEvent(ev);
       onSnapshot(m);
     }
@@ -185,6 +190,32 @@
   $('start').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('again').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('retry').addEventListener('click', () => location.reload());
+
+  // map selector, in the lobby and on the results card: any seated player picks, the last pick wins
+  let mapsSig = '';
+  function renderMaps(current, seated) {
+    const sig = `${current}:${seated}`;
+    if (sig === mapsSig) return;
+    mapsSig = sig;
+    for (const box of [$('maps'), $('maps-results')]) {
+      box.innerHTML = '';
+      for (const m of T.maps()) {
+        const b = document.createElement('button');
+        b.className = 'map';
+        b.setAttribute('aria-pressed', String(m.id === current));
+        b.disabled = !seated;
+        b.title = seated ? m.name : 'Solo chi è seduto sceglie la mappa';
+        const img = document.createElement('img');
+        img.src = `maps/thumbs/${m.id}.png`;
+        img.alt = '';
+        b.appendChild(img);
+        b.appendChild(document.createTextNode(m.name));
+        b.addEventListener('click', (e) => { send({ t: 'map', id: m.id }); e.currentTarget.blur(); });
+        box.appendChild(b);
+      }
+    }
+    $('map-hint').textContent = course.def.hint || '';
+  }
   $('pause').addEventListener('click', (e) => { send({ t: 'pause' }); e.currentTarget.blur(); });
   for (const t of ['resume', 'restart', 'stop']) $(t).addEventListener('click', (e) => { send({ t }); e.currentTarget.blur(); });
   $('leave').addEventListener('click', (e) => {
@@ -245,13 +276,29 @@
   const seatStripe = (c) => `linear-gradient(${c}, ${c}) left top / 8px 100% no-repeat, ${PAPER}`;
 
   // checkpoints on the progress bar
-  for (const s of T.CHECKPOINTS) {
-    const d = document.createElement('div');
-    d.className = 'cp';
-    d.style.bottom = `${(100 * s) / T.FINISH_S}%`;
-    $('progress').appendChild(d);
+  let cpEls = [];
+  function placeCheckpoints() {
+    for (const el of cpEls) el.remove();
+    cpEls = course.CHECKPOINTS.map((s) => {
+      const d = document.createElement('div');
+      d.className = 'cp';
+      d.style.bottom = `${(100 * s) / course.FINISH_S}%`;
+      $('progress').appendChild(d);
+      return d;
+    });
   }
-  const cpEls = [...document.querySelectorAll('#progress .cp')];
+  placeCheckpoints();
+
+  function useCourse(id, seed) {
+    if (id === course.id && seed === course.seed) return;
+    course = T.course(id, seed);
+    painter = window.IppoDraw[id];
+    world = painter.build(course);
+    placeCheckpoints();
+    const p = course.pointAt(course.START_S);
+    cam.x = p.x;
+    cam.y = p.y - 150;
+  }
 
   // What the screen shows: splash | lobby | race | results. Only setView() changes it.
   let view = 'splash';
@@ -318,6 +365,7 @@
       seatEls[i].querySelector('.fill').style.width = `${s[3]}%`;
       seatEls[i].classList.toggle('tired', !!s[5]);
     });
+    renderMaps(course.id, seated);
     const canSit = joined && !wantSeat && !seated && !racing(m.st) && m.s.filter(Boolean).length < T.MAX_SEATS;
     $('sit').hidden = !canSit;
     $('sit-results').hidden = !canSit;
@@ -339,7 +387,7 @@
         blip(880, 0.3, 'sine', 0.25);
         break;
       case 'cp':
-        toast(`Checkpoint ${ev.i + 1} di ${T.CHECKPOINTS.length}`);
+        toast(`Checkpoint ${ev.i + 1} di ${course.CHECKPOINTS.length}`);
         blip(660, 0.12, 'sine', 0.2);
         setTimeout(() => blip(990, 0.18, 'sine', 0.2), 110);
         break;
@@ -378,9 +426,14 @@
 
   function showResults(ev) {
     $('final-time').textContent = fmt(ev.time);
-    const morsi = ev.bites === 1 ? '1 morso di coccodrillo' : `${ev.bites} morsi di coccodrillo`;
+    // every cause the map has, zero included, worded by the map
+    const backs = Object.entries(course.def.causes || {}).map(([k, [one, many]]) => {
+      const n = (ev.backs || {})[k] || 0;
+      return n === 1 ? `1 ${one}` : `${n} ${many}`;
+    });
     const vestiti = ev.sharts === 1 ? '1 peto vestito' : `${ev.sharts || 0} peti vestiti`;
-    $('final-stats').textContent = `${morsi}, ${vestiti}, ${ev.sync}% del tempo a spingere tutti insieme.`;
+    $('final-stats').textContent = `${[...backs, vestiti].join(', ')}, ${ev.sync}% del tempo a spingere tutti insieme.`;
+    $('best-title').textContent = `Migliori tempi: ${course.def.name}`;
     const ol = $('best');
     ol.innerHTML = '';
     for (const b of best) {
@@ -555,38 +608,6 @@
     for (const id of [...voices.keys()]) if (!pushing.has(id)) stopFart(id);
   }
 
-  // ---------- precomputed world ----------
-  const riverPath = new Path2D();
-  const leftBank = new Path2D(), rightBank = new Path2D();
-  T.PTS.forEach((p, i) => {
-    const nx = -p.ty, ny = p.tx;
-    const lx = p.x - nx * p.hw, ly = p.y - ny * p.hw;
-    if (i === 0) { riverPath.moveTo(lx, ly); leftBank.moveTo(lx, ly); }
-    else { riverPath.lineTo(lx, ly); leftBank.lineTo(lx, ly); }
-  });
-  for (let i = T.PTS.length - 1; i >= 0; i--) {
-    const p = T.PTS[i];
-    const x = p.x + -p.ty * p.hw, y = p.y + p.tx * p.hw;
-    riverPath.lineTo(x, y);
-    if (i === T.PTS.length - 1) rightBank.moveTo(x, y); else rightBank.lineTo(x, y);
-  }
-  riverPath.closePath();
-
-  // bushes on the banks, to convey motion
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const bushes = [];
-  for (let s = 0; s < T.LENGTH; s += 70) {
-    for (const side of [-1, 1]) {
-      if (rnd() < 0.35) continue;
-      const p = T.pointAt(s + rnd() * 60);
-      const d = p.hw + 70 + rnd() * 320;
-      bushes.push({ x: p.x + p.nx * d * side, y: p.y + p.ny * d * side, r: 18 + rnd() * 26 });
-    }
-  }
-  const streaks = [];
-  for (let i = 0; i < 420; i++) streaks.push({ s0: rnd() * T.LENGTH, off: rnd() * 1.7 - 0.85, len: 18 + rnd() * 30 });
-
   // ---------- render ----------
   let dpr = 1, cw = 0, ch = 0;
   function resize() {
@@ -599,8 +620,12 @@
   window.addEventListener('resize', resize);
   resize();
 
-  const startP = T.pointAt(T.START_S);
+  const startP = course.pointAt(course.START_S);
   const cam = { x: startP.x, y: startP.y - 150 };
+  const startRaft = () => {
+    const p = course.pointAt(course.START_S);
+    return { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0 };
+  };
   let shake = 0;
   const particles = [];
   let lastFrame = performance.now() / 1000;
@@ -703,7 +728,7 @@
     const sm = sample();
     const rg = sm ? sm.rg : now;
 
-    let raft = { x: startP.x, y: startP.y, a: Math.atan2(startP.tx, -startP.ty), vx: 0, vy: 0 };
+    let raft = startRaft();
     let seats = [null, null];
     let st = 'lobby';
     if (sm) {
@@ -732,51 +757,19 @@
     const sx = (Math.random() - 0.5) * shake, sy = (Math.random() - 0.5) * shake;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = GRASS;
+    ctx.fillStyle = painter.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * (cw / 2 - zoom * (cam.x + sx)), dpr * (ch / 2 - zoom * (cam.y + sy)));
     const vw = cw / zoom / 2 + 120, vh = ch / zoom / 2 + 120;
     const inView = (x, y) => Math.abs(x - cam.x) < vw && Math.abs(y - cam.y) < vh;
 
-    // banks and water
-    ctx.fillStyle = BUSH;
-    for (const b of bushes) {
-      if (!inView(b.x, b.y)) continue;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = SAND;
-    ctx.lineWidth = 70;
-    ctx.stroke(leftBank);
-    ctx.stroke(rightBank);
-    ctx.fillStyle = WATER;
-    ctx.fill(riverPath);
-    ctx.strokeStyle = 'rgba(31,43,46,0.25)';
-    ctx.lineWidth = 6;
-    ctx.stroke(leftBank);
-    ctx.stroke(rightBank);
-
-    // current
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    for (const s of streaks) {
-      const ss = (((s.s0 - rg * 55) % T.LENGTH) + T.LENGTH) % T.LENGTH;
-      const p = T.pointAt(ss);
-      const x = p.x + p.nx * s.off * p.hw, y = p.y + p.ny * s.off * p.hw;
-      if (!inView(x, y)) continue;
-      ctx.moveTo(x, y);
-      ctx.lineTo(x - p.tx * s.len, y - p.ty * s.len);
-    }
-    ctx.stroke();
+    const view = { course, rg, inView };
+    painter.ground(ctx, world, view);
 
     // lines: start, checkpoints, finish
     const cpDone = latest ? latest.cp : -1;
     const crossLine = (s, color, dash) => {
-      const p = T.pointAt(s);
+      const p = course.pointAt(s);
       ctx.setLineDash(dash);
       ctx.strokeStyle = color;
       ctx.lineWidth = 10;
@@ -786,10 +779,10 @@
       ctx.stroke();
       ctx.setLineDash([]);
     };
-    crossLine(T.START_S + 90, 'rgba(255,248,225,0.7)', []);
-    T.CHECKPOINTS.forEach((s, i) => crossLine(s, i <= cpDone ? GAS : 'rgba(255,248,225,0.85)', [26, 18]));
+    crossLine(course.START_S + 90, 'rgba(255,248,225,0.7)', []);
+    course.CHECKPOINTS.forEach((s, i) => crossLine(s, i <= cpDone ? GAS : 'rgba(255,248,225,0.85)', [26, 18]));
     {
-      const p = T.pointAt(T.FINISH_S);
+      const p = course.pointAt(course.FINISH_S);
       const n = 14, w = (2 * p.hw) / n;
       for (let row = 0; row < 2; row++) {
         for (let i = 0; i < n; i++) {
@@ -804,62 +797,7 @@
       }
     }
 
-    // whirlpools
-    for (const v of T.VORTICES) {
-      if (!inView(v.x, v.y)) continue;
-      ctx.fillStyle = 'rgba(31,43,46,0.12)';
-      ctx.beginPath();
-      ctx.arc(v.x, v.y, v.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 6;
-      for (let i = 0; i < 3; i++) {
-        const a0 = rg * 2.2 + i * 2.1;
-        ctx.beginPath();
-        ctx.arc(v.x, v.y, v.r * (0.3 + i * 0.22), a0, a0 + Math.PI * 1.1);
-        ctx.stroke();
-      }
-    }
-    // rocks
-    for (const r of T.ROCKS) {
-      if (!inView(r.x, r.y)) continue;
-      ctx.fillStyle = '#8d979b';
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#b3bcbf';
-      ctx.beginPath();
-      ctx.arc(r.x - r.r * 0.3, r.y - r.r * 0.3, r.r * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // barrels
-    for (const b of T.barrelsAt(rg)) {
-      if (!inView(b.x, b.y)) continue;
-      ctx.fillStyle = WOOD;
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.strokeStyle = '#5a6366';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r * 0.62, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = WOOD_DARK;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // crocodiles
-    for (const c of T.crocsAt(rg)) {
-      if (!inView(c.x, c.y)) continue;
-      drawCroc(c.x, c.y, c.r, Math.atan2(c.ny * c.dir, c.nx * c.dir), rg);
-    }
+    painter.obstacles(ctx, world, view);
 
     // gas particles: spawned below the raft, drawn above it
     const cos = Math.cos(raft.a), sin = Math.sin(raft.a);
@@ -942,8 +880,8 @@
     if (latest) {
       const run = latest.st === 'running' ? latest.tm + Math.max(0, rg - latest.gt) : latest.st === 'countdown' ? raceClock : latest.tm;
       $('timer').textContent = fmt(run);
-      const s = T.closest(raft.x, raft.y).s;
-      $('progress-marker').style.bottom = `${Math.min(100, (100 * s) / T.FINISH_S)}%`;
+      const s = course.closest(raft.x, raft.y).s;
+      $('progress-marker').style.bottom = `${Math.min(100, (100 * s) / course.FINISH_S)}%`;
     }
 
     requestAnimationFrame(frame);
@@ -1092,61 +1030,6 @@
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-  }
-
-  function drawCroc(x, y, r, ang, t) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(ang);
-    const wag = Math.sin(t * 6) * 0.25;
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3.5;
-    ctx.fillStyle = '#4f7d3c';
-    // tail
-    ctx.save();
-    ctx.translate(-r * 0.9, 0);
-    ctx.rotate(wag);
-    ctx.beginPath();
-    ctx.moveTo(0, -r * 0.35);
-    ctx.lineTo(-r * 1.4, 0);
-    ctx.lineTo(0, r * 0.35);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-    // body
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.1, r * 0.55, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    // snout
-    ctx.beginPath();
-    ctx.roundRect(r * 0.6, -r * 0.32, r * 1.2, r * 0.64, r * 0.3);
-    ctx.fill();
-    ctx.stroke();
-    // teeth
-    ctx.fillStyle = '#fff';
-    for (let i = 0; i < 4; i++) {
-      const px = r * 0.85 + i * r * 0.22;
-      for (const sgn of [-1, 1]) {
-        ctx.beginPath();
-        ctx.moveTo(px, sgn * r * 0.32);
-        ctx.lineTo(px + 4, sgn * (r * 0.32 + 6));
-        ctx.lineTo(px + 8, sgn * r * 0.32);
-        ctx.fill();
-      }
-    }
-    // eyes
-    for (const sgn of [-1, 1]) {
-      ctx.fillStyle = '#ffd23f';
-      ctx.beginPath();
-      ctx.arc(r * 0.45, sgn * r * 0.38, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = INK;
-      ctx.fillRect(r * 0.45 - 1, sgn * r * 0.38 - 4, 2, 8);
-    }
-    ctx.restore();
   }
 
   connect();

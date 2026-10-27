@@ -3,11 +3,12 @@
 // centre line and dodges the first obstacle within 550 px. The ~120 s difficulty target
 // was calibrated against exactly this logic, so keep it unchanged.
 const { Room } = require('../../server/game.js');
-const T = require('../../public/track.js');
 const { seeded } = require('./rng.js');
 
-function runCrew({ players, smart = true, maxSeconds = 400, seed = 1 }) {
+function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiume' }) {
   const room = new Room('bot', { random: seeded(seed) });
+  room.useMap(map, seed);
+  room.resetRun();
   const events = [];
   room.flush = function flush() {
     for (const e of this.events) if (e.k !== 'bump') events.push({ ...e, at: this.time });
@@ -19,6 +20,7 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1 }) {
     room.join(c, `bot${i}`);
   }
   room.start();
+  const T = room.course;
   let steps = 0;
   let fartOn = true;
   while (room.status !== 'finished' && steps < 60 * maxSeconds) {

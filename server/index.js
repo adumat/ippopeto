@@ -22,15 +22,20 @@ const DEBUG = process.env.IPPO_DEBUG === '1';
 
 // Static files are loaded into memory at startup (no filesystem access at runtime)
 const PUBLIC = path.join(__dirname, '..', 'public');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.mp3': 'audio/mpeg',
+  '.png': 'image/png',
+};
 const files = new Map();
-for (const f of fs.readdirSync(PUBLIC)) {
-  const ext = path.extname(f);
-  if (TYPES[ext]) files.set('/' + f, { body: fs.readFileSync(path.join(PUBLIC, f)), type: TYPES[ext] });
-}
-for (const f of fs.readdirSync(path.join(PUBLIC, 'sounds'))) {
-  if (path.extname(f) === '.mp3') files.set('/sounds/' + f, { body: fs.readFileSync(path.join(PUBLIC, 'sounds', f)), type: 'audio/mpeg' });
-}
+(function load(dir, prefix) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) load(path.join(dir, e.name), `${prefix}${e.name}/`);
+    else if (TYPES[path.extname(e.name)]) files.set(prefix + e.name, { body: fs.readFileSync(path.join(dir, e.name)), type: TYPES[path.extname(e.name)] });
+  }
+})(PUBLIC, '/');
 files.set('/', files.get('/index.html'));
 
 const rooms = new Map();
@@ -100,7 +105,7 @@ function onConnection(ws, room) {
   const client = { id: crypto.randomBytes(4).toString('hex'), ws, seat: null };
   ws.isAlive = true;
   room.addClient(client);
-  ws.send(JSON.stringify({ t: 'hello', id: client.id, room: room.id, best: room.best }));
+  ws.send(JSON.stringify({ t: 'hello', id: client.id, room: room.id, best: room.bestOf(room.mapId) }));
 
   ws.on('pong', () => {
     ws.isAlive = true;
@@ -139,6 +144,9 @@ function onConnection(ws, room) {
         break;
       case 'leave':
         if (room.leave(client)) ws.send(JSON.stringify({ t: 'joined', seat: null }));
+        break;
+      case 'map':
+        room.setMap(client, String(msg.id || ''));
         break;
       case 'debug':
         if (DEBUG && client.seat != null && msg.op === 'teleport') room.teleport(msg.s);

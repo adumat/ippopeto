@@ -1,11 +1,12 @@
 'use strict';
 const Track = require('../public/track.js');
+const { SURFACES } = require('./rules/surfaces.js');
+const { rulesFor } = require('./rules/index.js');
 
 // Physics constants (units: px, s)
 const MASS = 4;
 const INERTIA = (MASS * (Track.RAFT_SIZE ** 2 * 2)) / 12;
 const FART_FORCE = 520;
-const LIN_DRAG = 1.1; // drag relative to the water
 const ANG_DRAG = 2.4;
 const AIM_SPEED = 2.6; // rad/s
 const GAS_MAX = 100;
@@ -41,18 +42,28 @@ class Room {
     this.tick = 0;
     this.status = 'lobby';
     this.countdown = 0;
-    this.best = [];
+    this.best = {}; // map id -> five fastest finishes
     this.events = [];
     this.emptySince = Date.now();
     this.lastBump = 0;
+    this.useMap(Track.DEFAULT_MAP, 0);
     this.resetRun();
   }
 
+  useMap(id, seed) {
+    this.mapId = id;
+    this.course = Track.course(id, seed);
+    this.seed = this.course.seed;
+    this.rules = rulesFor(this.course.def);
+  }
+
   resetRun() {
-    const p = Track.pointAt(Track.START_S);
+    const C = this.course;
+    const p = C.pointAt(C.START_S);
     this.raft = { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 };
     this.lastCp = -1;
-    this.bites = 0;
+    this.bites = 0; // every send-back during the race, whatever its cause
+    this.backs = {}; // cause -> count, worded by the map in the results
     this.time = 0;
     this.syncTime = 0;
     this.sharts = 0;
@@ -211,17 +222,44 @@ class Room {
     return true;
   }
 
+  // Any seated player picks the map between races; the vehicle moves to its start.
+  setMap(client, id) {
+    if ((this.status !== 'lobby' && this.status !== 'finished') || !this.seated(client)) return;
+    if (!Track.MAP_IDS.includes(id)) return;
+    this.useMap(id, Track.course(id).def.generated ? this.newSeed() : 0);
+    this.resetRun();
+    this.status = 'lobby';
+    this.compact();
+  }
+
+  newSeed() {
+    return 1 + Math.floor(this.random() * 2147483646);
+  }
+
   start() {
     if (this.status === 'countdown' || this.status === 'running') return;
     if (!this.seats.some(Boolean)) return;
+    // a generated map is new at every start, "Un altro giro" included
+    if (this.course.def.generated) this.useMap(this.mapId, this.newSeed());
     this.resetRun();
     this.status = 'countdown';
     this.countdown = COUNTDOWN;
   }
 
   respawn(s) {
-    const p = Track.pointAt(s);
+    const p = this.course.pointAt(s);
     Object.assign(this.raft, { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 });
+    for (const r of this.rules) if (r.onRespawn) r.onRespawn(this);
+  }
+
+  // Sent back to the last checkpoint by `cause`, one of the map's `causes`.
+  sendBack(cause, event) {
+    if (this.status === 'running') {
+      this.bites++;
+      this.backs[cause] = (this.backs[cause] || 0) + 1;
+    }
+    this.events.push(event);
+    this.respawn(this.lastCp >= 0 ? this.course.CHECKPOINTS[this.lastCp] : this.course.START_S);
   }
 
   // peto vestito: the tank empties and locks exactly as when it runs dry
@@ -234,7 +272,7 @@ class Room {
   }
 
   teleport(s) {
-    this.respawn(Math.max(0, Math.min(Track.LENGTH, Number(s) || 0)));
+    this.respawn(Math.max(0, Math.min(this.course.LENGTH, Number(s) || 0)));
   }
 
   bump(impulse) {
@@ -284,6 +322,7 @@ class Room {
     }
     const frozen = this.status === 'countdown';
     const R = this.raft;
+    const C = this.course;
 
     // gas and aim
     this.expireAway();
@@ -295,7 +334,14 @@ class Room {
       if (s.aim > Math.PI) s.aim -= 2 * Math.PI;
       if (s.aim < -Math.PI) s.aim += 2 * Math.PI;
       const can = s.fartHeld && !s.away && !s.exhausted && s.gas > 0 && !frozen;
-      if (can && s.gas < SHART_GAS && this.random() < 1 - Math.exp(-SHART_RATE * (1 - s.gas / SHART_GAS) ** 2 * dt)) {
+      let regen = 1, risk = 1;
+      for (const r of this.rules) {
+        if (!r.gas) continue;
+        const m = r.gas(this, s);
+        regen *= m.regen ?? 1;
+        risk *= m.shart ?? 1;
+      }
+      if (can && s.gas < SHART_GAS && this.random() < 1 - Math.exp(-risk * SHART_RATE * (1 - s.gas / SHART_GAS) ** 2 * dt)) {
         this.shart(s);
       } else if (can) {
         s.gas -= GAS_DRAIN * dt;
@@ -304,7 +350,7 @@ class Room {
           s.exhausted = true;
         }
       } else {
-        s.gas = Math.min(GAS_MAX, s.gas + GAS_REGEN * dt);
+        s.gas = Math.min(GAS_MAX, s.gas + regen * GAS_REGEN * dt);
         if (s.exhausted && s.gas >= GAS_RECOVER) s.exhausted = false;
       }
       s.farting = can && s.gas > 0;
@@ -339,11 +385,12 @@ class Room {
       torque += rx * wfy - ry * wfx;
     });
 
-    // water: downstream current + whirlpools
-    const c = Track.closest(R.x, R.y);
-    let wx = -c.tx * c.flow, wy = -c.ty * c.flow;
+    // the surface: downstream current + whirlpools
+    const c = C.closest(R.x, R.y);
+    const surface = SURFACES[C.surfaceAt(c.s)];
+    let wx = -c.tx * c.flow * surface.current, wy = -c.ty * c.flow * surface.current;
     let spin = 0;
-    for (const v of Track.VORTICES) {
+    for (const v of C.VORTICES) {
       const dx = v.x - R.x, dy = v.y - R.y;
       const d = Math.hypot(dx, dy);
       if (d < v.r && d > 1) {
@@ -354,17 +401,18 @@ class Room {
       }
     }
 
-    R.vx += (fx / MASS - LIN_DRAG * (R.vx - wx)) * dt;
-    R.vy += (fy / MASS - LIN_DRAG * (R.vy - wy)) * dt;
+    R.vx += (fx / MASS - surface.drag * (R.vx - wx)) * dt;
+    R.vy += (fy / MASS - surface.drag * (R.vy - wy)) * dt;
     R.w += (torque / INERTIA - ANG_DRAG * R.w + spin) * dt;
     R.x += R.vx * dt;
     R.y += R.vy * dt;
     R.a += R.w * dt;
     if (R.a > Math.PI) R.a -= 2 * Math.PI;
     if (R.a < -Math.PI) R.a += 2 * Math.PI;
+    for (const r of this.rules) if (r.force) r.force(this, dt);
 
     // banks
-    const c2 = Track.closest(R.x, R.y);
+    const c2 = C.closest(R.x, R.y);
     const limit = c2.hw - Track.RAFT_R;
     if (c2.dist > limit && c2.dist > 0) {
       const nx = (R.x - c2.cx) / c2.dist, ny = (R.y - c2.cy) / c2.dist;
@@ -382,38 +430,40 @@ class Room {
     }
 
     // obstacles
-    for (const r of Track.ROCKS) this.collideCircle(r.x, r.y, r.r);
-    for (const b of Track.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
-    for (const cr of Track.crocsAt(this.gt)) {
+    for (const r of C.ROCKS) this.collideCircle(r.x, r.y, r.r);
+    for (const b of C.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
+    for (const cr of C.crocsAt(this.gt)) {
       if (Math.hypot(R.x - cr.x, R.y - cr.y) < Track.RAFT_R + cr.r - 10) {
-        this.bites += this.status === 'running' ? 1 : 0;
-        this.events.push({ k: 'bite' });
-        this.respawn(this.lastCp >= 0 ? Track.CHECKPOINTS[this.lastCp] : Track.START_S);
+        this.sendBack('croc', { k: 'bite' });
         break;
       }
     }
+    for (const r of this.rules) if (r.collide) r.collide(this);
 
     // checkpoints and finish
     if (this.status === 'running') {
-      const s = Track.closest(R.x, R.y).s;
+      const s = C.closest(R.x, R.y).s;
       const next = this.lastCp + 1;
-      if (next < Track.CHECKPOINTS.length && s >= Track.CHECKPOINTS[next]) {
+      if (next < C.CHECKPOINTS.length && s >= C.CHECKPOINTS[next]) {
         this.lastCp = next;
         this.events.push({ k: 'cp', i: next });
       }
-      if (s >= Track.FINISH_S && this.lastCp === Track.CHECKPOINTS.length - 1) {
+      if (s >= C.FINISH_S && this.lastCp === C.CHECKPOINTS.length - 1) {
         this.status = 'finished';
         const crew = this.seats.filter(Boolean).map((x) => x.name).join(', ');
-        const entry = { crew, time: r1(this.time), bites: this.bites, sharts: this.sharts, sync: Math.round((100 * this.syncTime) / Math.max(this.time, 0.01)) };
-        this.best.push(entry);
-        this.best.sort((a, b) => a.time - b.time);
-        this.best = this.best.slice(0, 5);
-        this.events.push({ k: 'finish', ...entry, best: this.best });
+        const entry = { crew, time: r1(this.time), bites: this.bites, backs: this.backs, sharts: this.sharts, sync: Math.round((100 * this.syncTime) / Math.max(this.time, 0.01)) };
+        const best = [...this.bestOf(this.mapId), entry].sort((a, b) => a.time - b.time).slice(0, 5);
+        this.best[this.mapId] = best;
+        this.events.push({ k: 'finish', map: this.mapId, ...entry, best });
         this.compact();
       }
     }
 
     this.flush();
+  }
+
+  bestOf(id) {
+    return this.best[id] || [];
   }
 
   flush() {
@@ -427,6 +477,8 @@ class Room {
       r: [r1(R.x), r1(R.y), r3(R.a), r1(R.vx), r1(R.vy)],
       sy: this.sync ? 1 : 0,
       cp: this.lastCp,
+      mp: this.mapId,
+      sd: this.seed,
       b: this.bites,
       s: this.seats.map((s) => (s ? [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0, s.away ? 1 : 0, s.colour] : null)),
       ev: this.events,

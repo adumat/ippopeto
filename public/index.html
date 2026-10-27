@@ -35,6 +35,7 @@
   </section>
 
   <aside id="lobby" class="card" hidden>
+    <div id="maps" class="maps" aria-label="Mappa"></div>
     <h2>Equipaggio</h2>
     <ol id="crew"></ol>
     <div class="row">
@@ -47,7 +48,7 @@
       <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd>giri il sedere (anche con le frecce)</dd>
       <dt><kbd>Spazio</kbd></dt><dd>spingi, finché c'è gas</dd>
     </dl>
-    <p class="hint">Spingendo tutti nello stesso istante la spinta cresce. Un morso di coccodrillo vi riporta all'ultimo checkpoint. Intanto potete provare: la zattera è già in acqua.</p>
+    <p class="hint">Spingendo tutti nello stesso istante la spinta cresce. <span id="map-hint"></span></p>
   </aside>
 
   <section id="paused" class="card" hidden>
@@ -69,8 +70,9 @@
     <h2>Arrivati</h2>
     <p class="big-time" id="final-time"></p>
     <p id="final-stats"></p>
-    <h3>Migliori tempi della stanza</h3>
+    <h3 id="best-title">Migliori tempi della stanza</h3>
     <ol id="best"></ol>
+    <div id="maps-results" class="maps" aria-label="Mappa"></div>
     <div class="row">
       <button id="again" class="btn primary">Un altro giro</button>
       <button id="sit-results" class="btn" hidden>Siediti</button>
@@ -93,7 +95,9 @@
   <button id="pause" class="icon-btn" aria-label="Metti in pausa" title="Pausa (P)" hidden>⏸</button>
   <div id="conn" hidden>Connessione persa, riprovo…</div>
 
+  <script src="maps/fiume.js"></script>
   <script src="track.js"></script>
+  <script src="draw/fiume.js"></script>
   <script src="client.js"></script>
 </body>
 </html>

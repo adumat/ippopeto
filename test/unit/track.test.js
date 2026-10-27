@@ -1,20 +1,13 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const T = require('../../public/track.js');
+const Track = require('../../public/track.js');
+const { allCourses } = require('../helpers/courses.js');
 
-const MIN_GAP = 2 * T.RAFT_R + 20;
+const MIN_GAP = 2 * Track.RAFT_R + 20;
 const CLUSTER_S = 150;
 
-test('closest() maps every centre-line point back onto itself', () => {
-  for (let s = 0; s <= T.LENGTH; s += 10) {
-    const p = T.pointAt(s);
-    const c = T.closest(p.x, p.y);
-    assert.ok(Math.abs(c.s - s) <= 1, `centre line ambiguous at s=${s.toFixed(0)}: closest() returned ${c.s.toFixed(0)}`);
-  }
-});
-
-function solidsAt(t) {
+function solidsAt(T, t) {
   const label = (kind) => (o, i) => ({ ...o, name: `${kind} #${i}` });
   return [...T.ROCKS.map(label('rock')), ...T.barrelsAt(t).map(label('barrel')), ...T.crocsAt(t).map(label('crocodile'))].map((o) => {
     const c = T.closest(o.x, o.y);
@@ -23,7 +16,7 @@ function solidsAt(t) {
   });
 }
 
-// Obstacles close together along the course block the river as one.
+// Obstacles close together along the course block it as one.
 function clusters(obs) {
   const sorted = [...obs].sort((a, b) => a.s - b.s);
   const out = [];
@@ -35,7 +28,7 @@ function clusters(obs) {
   return out;
 }
 
-function widestGap(cluster) {
+function widestGap(T, cluster) {
   const sMin = cluster[0].s - CLUSTER_S / 2, sMax = cluster[cluster.length - 1].s + CLUSTER_S / 2;
   let hw = Infinity;
   for (let s = sMin; s <= sMax; s += 10) hw = Math.min(hw, T.pointAt(s).hw);
@@ -48,11 +41,28 @@ function widestGap(cluster) {
   return Math.max(best, hw - cursor);
 }
 
-test(`every solid obstacle leaves a gap of at least ${MIN_GAP} px`, () => {
-  for (let t = 0; t <= 20; t += 0.05) {
-    for (const cluster of clusters(solidsAt(t))) {
-      const gap = widestGap(cluster);
-      assert.ok(gap >= MIN_GAP, `${cluster.map((o) => o.name).join(' + ')}: widest gap ${gap.toFixed(0)} px at t=${t.toFixed(2)}s`);
+for (const { label, course: T } of allCourses()) {
+  test(`${label}: closest() maps every centre-line point back onto itself`, () => {
+    for (let s = 0; s <= T.LENGTH; s += 10) {
+      const p = T.pointAt(s);
+      const c = T.closest(p.x, p.y);
+      assert.ok(Math.abs(c.s - s) <= 1, `${label}: centre line ambiguous at s=${s.toFixed(0)}: closest() returned ${c.s.toFixed(0)}`);
     }
-  }
+  });
+
+  test(`${label}: every solid obstacle leaves a gap of at least ${MIN_GAP} px`, () => {
+    for (let t = 0; t <= 20; t += 0.05) {
+      for (const cluster of clusters(solidsAt(T, t))) {
+        const gap = widestGap(T, cluster);
+        assert.ok(gap >= MIN_GAP, `${label}: ${cluster.map((o) => o.name).join(' + ')}: widest gap ${gap.toFixed(0)} px at t=${t.toFixed(2)}s`);
+      }
+    }
+  });
+}
+
+test('the same seed builds the same course', () => {
+  const def = { id: 'gen', generated: true, generate: (rng) => ({ control: [[0, 0, 200, 0], [rng() * 100, -500, 200, 0], [0, -1000, 200, 0]] }) };
+  const a = Track.build(def, 42), b = Track.build(def, 42), c = Track.build(def, 43);
+  assert.deepStrictEqual(a.PTS, b.PTS);
+  assert.notDeepStrictEqual(a.PTS, c.PTS);
 });
