@@ -434,7 +434,7 @@ class Room {
     for (const b of C.barrelsAt(this.gt)) this.collideCircle(b.x, b.y, b.r);
     for (const cr of C.crocsAt(this.gt)) {
       if (Math.hypot(R.x - cr.x, R.y - cr.y) < Track.RAFT_R + cr.r - 10) {
-        this.sendBack('croc', { k: 'bite' });
+        this.sendBack(C.def.biter || 'croc', { k: 'bite' });
         break;
       }
     }

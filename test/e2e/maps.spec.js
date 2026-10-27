@@ -42,3 +42,34 @@ test('the lobby shows the map selector; only seated players can pick', async ({ 
   bot.close();
   expect(errors).toEqual([]);
 });
+
+test('a pick in one browser changes the map for everyone, and the Fogne race to the end', async ({ browser, baseURL }) => {
+  const room = roomName('fogne');
+  const errors = [];
+  const pages = [];
+  for (const name of ['Anna', 'Bruno']) {
+    const page = await (await browser.newContext()).newPage();
+    watchErrors(page, errors);
+    await board(page, room, name);
+    pages.push(page);
+  }
+  await pages[0].locator('#maps .map', { hasText: 'Fogne della città' }).click();
+  for (const page of pages) await expect(page.locator('#maps .map[aria-pressed="true"]')).toHaveText('Fogne della città');
+
+  const F = require('../../public/track.js').course('fogne');
+  const bot = await WsBot.join(baseURL, room, 'Carla');
+  await pages[1].click('#start');
+  await bot.waitFor((m) => m.t === 's' && m.st === 'running' && m.mp === 'fogne');
+  for (let i = 0; i < F.CHECKPOINTS.length; i++) {
+    bot.teleport(F.CHECKPOINTS[i] + 20);
+    await bot.waitFor((e) => e.k === 'cp' && e.i === i);
+  }
+  bot.teleport(F.FINISH_S + 20);
+  await bot.waitFor((e) => e.k === 'finish');
+  for (const page of pages) {
+    await expect(page.locator('#best-title')).toHaveText('Migliori tempi: Fogne della città');
+    await expect(page.locator('#final-stats')).toContainText('morsi di ratto');
+  }
+  bot.close();
+  expect(errors).toEqual([]);
+});

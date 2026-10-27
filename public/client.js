@@ -10,6 +10,8 @@
   const INK = '#1f2b2e', SAND = '#efdda8';
   // brown is reserved for the peto vestito
   const BROWN = '#6b4423', BROWN_LIGHT = '#8c5a2e';
+  // sewer water from a jet: the same splats as the peto vestito, in green
+  const SLIME = '#6f8a2a', SLIME_LIGHT = '#8fa83a';
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
   const $ = (id) => document.getElementById(id);
   const canvas = $('game');
@@ -406,6 +408,17 @@
         shake = Math.max(shake, 12);
         break;
       }
+      case 'jet':
+        toast('Che schifo! Il tubo vi ha centrati', 2200);
+        spawnSplats(SLIME, SLIME_LIGHT);
+        thud(1);
+        shake = Math.max(shake, 16);
+        break;
+      case 'suck':
+        toast('Risucchiati! Si torna indietro', 2200);
+        thud(0.6);
+        shake = Math.max(shake, 10);
+        break;
       case 'bite':
         toast('Gnam! Si torna all’ultimo checkpoint', 2200);
         chomp();
@@ -655,7 +668,7 @@
   const SPLAT_HOLD = 4, SPLAT_DRIP = 1.5;
   let splats = [];
   const stains = new Map(); // seat id -> time the stain wears off
-  function spawnSplats() {
+  function spawnSplats(fill = BROWN, light = BROWN_LIGHT) {
     const now = performance.now() / 1000;
     const n = 4 + Math.floor(Math.random() * 3);
     for (let i = 0; i < n; i++) {
@@ -670,7 +683,7 @@
         const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * 1.1;
         return { x: Math.cos(a) * d, y: Math.sin(a) * d, r: 0.07 + Math.random() * 0.13 };
       });
-      splats.push({ x, y, r: 0.1 + Math.random() * 0.08, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04 });
+      splats.push({ x, y, r: 0.1 + Math.random() * 0.08, rot: Math.random() * Math.PI * 2, outline, drops, born: now + i * 0.04, fill, light });
     }
     splats = splats.slice(-10);
   }
@@ -689,7 +702,7 @@
       if (!reducedMotion) ctx.scale(1, 1 + drip * 0.9);
       const R = sp.r * unit;
       ctx.rotate(sp.rot);
-      ctx.fillStyle = BROWN;
+      ctx.fillStyle = sp.fill;
       ctx.beginPath();
       const n = sp.outline.length;
       for (let k = 0; k <= n; k++) {
@@ -709,7 +722,7 @@
         ctx.fill();
       }
       // a wet highlight
-      ctx.fillStyle = BROWN_LIGHT;
+      ctx.fillStyle = sp.light;
       ctx.beginPath();
       ctx.ellipse(-0.25 * R, -0.3 * R, 0.32 * R, 0.16 * R, -0.5, 0, Math.PI * 2);
       ctx.fill();
@@ -763,7 +776,7 @@
     const vw = cw / zoom / 2 + 120, vh = ch / zoom / 2 + 120;
     const inView = (x, y) => Math.abs(x - cam.x) < vw && Math.abs(y - cam.y) < vh;
 
-    const view = { course, rg, inView };
+    const view = { course, rg, inView, cam, vw, vh };
     painter.ground(ctx, world, view);
 
     // lines: start, checkpoints, finish

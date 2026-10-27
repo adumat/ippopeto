@@ -4,7 +4,11 @@
 //   collide(room)              contacts after the built-in obstacles
 //   gas(room, seat)            { regen, shart } multipliers for one seat this step
 //   onRespawn(room)            reset rule state when the vehicle is sent back
-const RULES = {};
+const RULES = {
+  jets: require('./jets.js'),
+  intakes: require('./intakes.js'),
+  methane: require('./methane.js'),
+};
 
 function rulesFor(def) {
   return (def.rules || []).map((name) => {

@@ -5,7 +5,7 @@
   'use strict';
 
   // Maps in the order the selector lists them. A map is listed only once it is playable.
-  const ORDER = ['fiume'];
+  const ORDER = ['fiume', 'fogne'];
   const isNode = typeof module !== 'undefined' && module.exports;
   const extra = {};
   const defOf = (id) => extra[id] || (isNode ? require(`./maps/${id}.js`) : (root.IppoMaps || {})[id]);
@@ -136,6 +136,23 @@
       return 'water';
     }
 
+    // A point on a wall: side +1 is the right bank. (nx, ny) points into the course.
+    function wall(u, side) {
+      const p = pointAt(u * LENGTH);
+      return { x: p.x + p.nx * side * p.hw, y: p.y + p.ny * side * p.hw, nx: -p.nx * side, ny: -p.ny * side, tx: p.tx, ty: p.ty, s: p.s, hw: p.hw };
+    }
+    // Pipes cycle drip (1 s), fire (1 s), rest; the phase is a pure function of room time.
+    const JETS = (obs.jets || []).map(([u, side, period, phase]) => ({ ...wall(u, side), side, period, phase }));
+    const jetState = (j, t) => {
+      const q = (((t + j.phase) % j.period) + j.period) % j.period;
+      return { stage: q < 1 ? 'drip' : q < 2 ? 'fire' : 'rest', q, n: Math.floor((t + j.phase) / j.period) };
+    };
+    const INTAKES = (obs.intakes || []).map(([u, side, r, k]) => ({ ...wall(u, side), side, r, k }));
+    const METHANE = (obs.methane || []).map(([u, off, r]) => {
+      const { x, y } = place(u, off);
+      return { x, y, r };
+    });
+
     const barrels = obs.barrels || [], crocs = obs.crocs || [];
     return {
       id: def.id,
@@ -157,6 +174,10 @@
         const { x, y } = place(u, off);
         return { x, y, r, k };
       }),
+      JETS,
+      jetState,
+      INTAKES,
+      METHANE,
       barrelsAt: (t) => movers(barrels, t),
       crocsAt: (t) => movers(crocs, t),
       START_S: 220,
