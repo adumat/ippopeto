@@ -57,10 +57,11 @@ for (const m of require('../../public/track.js').maps().filter((x) => x.id !== '
     await pages[0].locator('#maps .map', { hasText: m.name }).click();
     for (const page of pages) await expect(page.locator('#maps .map[aria-pressed="true"]')).toHaveText(m.name);
 
-    const C = require('../../public/track.js').course(m.id);
     const bot = await WsBot.join(baseURL, room, 'Carla');
     await pages[1].click('#start');
-    await bot.waitFor((s) => s.t === 's' && s.st === 'running' && s.mp === m.id);
+    const running = await bot.waitFor((s) => s.t === 's' && s.st === 'running' && s.mp === m.id);
+    // a generated map races the layout of the seed the server picked
+    const C = require('../../public/track.js').course(m.id, running.sd);
     for (let i = 0; i < C.CHECKPOINTS.length; i++) {
       bot.teleport(C.CHECKPOINTS[i] + 20);
       await bot.waitFor((e) => e.k === 'cp' && e.i === i);

@@ -450,6 +450,11 @@
         thud(1);
         shake = 22;
         break;
+      case 'bats':
+        toast('Pipistrelli!', 1600);
+        blindUntil = performance.now() / 1000 + 2;
+        thud(0.5);
+        break;
       case 'bear':
         blip(196, 0.25, 'sawtooth', 0.18);
         break;
@@ -674,6 +679,7 @@
     return { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0 };
   };
   let shake = 0;
+  let blindUntil = 0; // a bat swarm covers the view until then
   const particles = [];
   let lastFrame = performance.now() / 1000;
   const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -888,6 +894,7 @@
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+    if (painter.overlay) painter.overlay(ctx, world, { ...view, raft, particles, blind: Math.max(0, blindUntil - performance.now() / 1000) });
 
     // names above the hippos
     ctx.font = `700 ${seats.length >= 5 ? 13 : 17}px "Atkinson Hyperlegible", system-ui, sans-serif`;

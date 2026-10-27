@@ -9,7 +9,7 @@ const CLUSTER_S = 150;
 
 function solidsAt(T, t) {
   const label = (kind) => (o, i) => ({ ...o, name: `${kind} #${i}` });
-  return [...T.ROCKS.map(label('rock')), ...T.barrelsAt(t).map(label('barrel')), ...T.crocsAt(t).map(label('crocodile'))].map((o) => {
+  return [...T.ROCKS.map(label('rock')), ...T.barrelsAt(t).map(label('barrel')), ...T.crocsAt(t).map(label('crocodile')), ...T.batsAt(t).map(label('bats'))].map((o) => {
     const c = T.closest(o.x, o.y);
     const lat = (o.x - c.cx) * -c.ty + (o.y - c.cy) * c.tx;
     return { name: o.name, s: c.s, lo: lat - o.r, hi: lat + o.r };
@@ -48,6 +48,11 @@ for (const { label, course: T } of allCourses()) {
       const c = T.closest(p.x, p.y);
       assert.ok(Math.abs(c.s - s) <= 1, `${label}: centre line ambiguous at s=${s.toFixed(0)}: closest() returned ${c.s.toFixed(0)}`);
     }
+  });
+
+  test(`${label}: no two stretches come within ${Track.MIN_CLEARANCE} px of each other`, () => {
+    const gap = Track.clearance(T.PTS);
+    assert.ok(gap >= Track.MIN_CLEARANCE, `${label}: banks of two stretches ${gap.toFixed(0)} px apart`);
   });
 
   test(`${label}: every solid obstacle leaves a gap of at least ${MIN_GAP} px`, () => {

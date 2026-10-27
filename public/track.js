@@ -5,7 +5,7 @@
   'use strict';
 
   // Maps in the order the selector lists them. A map is listed only once it is playable.
-  const ORDER = ['fiume', 'fogne', 'fiordo', 'lava'];
+  const ORDER = ['fiume', 'fogne', 'fiordo', 'lava', 'grotta'];
   const isNode = typeof module !== 'undefined' && module.exports;
   const extra = {};
   const defOf = (id) => extra[id] || (isNode ? require(`./maps/${id}.js`) : (root.IppoMaps || {})[id]);
@@ -60,9 +60,32 @@
     return P;
   }
 
+  // Smallest gap, in px, between the banks of two stretches that are not neighbours along
+  // the course. Negative means the river touches itself.
+  function clearance(P) {
+    let worst = Infinity;
+    for (let i = 0; i < P.length; i += 2) {
+      for (let j = i + 2; j < P.length; j += 2) {
+        const a = P[i], b = P[j];
+        if (b.s - a.s < 2 * (a.hw + b.hw)) continue;
+        worst = Math.min(worst, Math.hypot(a.x - b.x, a.y - b.y) - a.hw - b.hw);
+      }
+    }
+    return worst;
+  }
+  const MIN_CLEARANCE = 100;
+
   function build(def, seed = 0) {
-    const layout = def.generated ? def.generate(rng(seed)) : def;
-    const PTS = centreLine(layout.control);
+    let layout = def, PTS;
+    if (def.generated) {
+      // a layout whose stretches come too close is redrawn from the same random stream
+      const r = rng(seed);
+      for (let tries = 0; tries < 20; tries++) {
+        layout = def.generate(r);
+        PTS = centreLine(layout.control);
+        if (clearance(PTS) >= MIN_CLEARANCE) break;
+      }
+    } else PTS = centreLine(layout.control);
     const LENGTH = PTS[PTS.length - 1].s;
     const obs = layout.obstacles || {};
 
@@ -219,7 +242,7 @@
       return { left: impact - t, n: k };
     };
 
-    const barrels = obs.barrels || [], crocs = obs.crocs || [];
+    const barrels = obs.barrels || [], crocs = obs.crocs || [], bats = obs.bats || [];
     return {
       id: def.id,
       seed: def.generated ? seed : 0,
@@ -257,6 +280,7 @@
       METHANE,
       barrelsAt: (t) => movers(barrels, t),
       crocsAt: (t) => movers(crocs, t),
+      batsAt: (t) => movers(bats, t),
       START_S: 220,
       CHECKPOINTS: [0.2, 0.4, 0.6, 0.8].map((u) => u * LENGTH),
       FINISH_S: LENGTH - 380,
@@ -301,6 +325,8 @@
     maps,
     course,
     build,
+    clearance,
+    MIN_CLEARANCE,
     register,
     rng,
     RAFT_SIZE: 120,

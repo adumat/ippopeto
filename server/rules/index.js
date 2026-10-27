@@ -19,6 +19,7 @@ const RULES = {
   geysers: require('./geysers.js'),
   bombs: require('./bombs.js'),
   heat: require('./heat.js'),
+  bats: require('./bats.js'),
 };
 
 function rulesFor(def) {
