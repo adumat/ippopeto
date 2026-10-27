@@ -7,7 +7,7 @@ The game is in Italian.
 ## Playing
 
 - Everyone opens the same link (`/?room=<name>`). Without `room`, a random one is generated.
-- `A`/`D` or the arrow keys turn your rear. `Space` (or `W`/`↑`) pushes while you have gas. `M` toggles audio.
+- `A`/`D` or the arrow keys turn your rear. `Space` (or `W`/`↑`) pushes while you have gas. `M` toggles audio. `P` or `Esc` pauses; from the pause you can resume, restart, end the race, and let people on or off the raft.
 - On phones, on-screen buttons appear.
 - Rocks and barrels bounce you, whirlpools drag you around, crocodiles send you back to the last checkpoint.
 - Forcing it on an almost empty tank risks a peto vestito: your tank empties, everyone's screen gets splattered, and it shows up in the results.

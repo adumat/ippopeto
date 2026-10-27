@@ -8,10 +8,10 @@
 
 ## 2. Client
 
-- [ ] 2.1 Clamp the render world time to the newest snapshot's `gt`, and keep the last race time across the resume countdown. Verify with an e2e that the timer does not reset to 0:00.0 during the resume countdown
-- [ ] 2.2 Add the pause button, `P`/`Esc`, the "In pausa" card with Riprendi, Ricomincia, Termina la gara, Siediti/Alzati and the crew, the `paused` view, and the "<name> ha messo in pausa" toast. Verify with an e2e: two browsers and a bot; one pauses, a spectator sits, resume shows a countdown, and stop returns everyone to the lobby
+- [x] 2.1 Clamp the render world time to the newest snapshot's `gt`, and keep the last race time across the resume countdown. Verify with an e2e that the timer does not reset to 0:00.0 during the resume countdown
+- [x] 2.2 Add the pause button, `P`/`Esc`, the "In pausa" card with Riprendi, Ricomincia, Termina la gara, Siediti/Alzati and the crew, the `paused` view, and the "<name> ha messo in pausa" toast. Verify with an e2e: two browsers and a bot; one pauses, a spectator sits, resume shows a countdown, and stop returns everyone to the lobby
 - [ ] 2.3 Send the owner screenshots of the pause card on desktop and phone. Verify the owner approves
 
 ## 3. Docs
 
-- [ ] 3.1 Document the pause in the README (keys) and AGENTS.md (status machine). Verify both mention `paused`
+- [x] 3.1 Document the pause in the README (keys) and AGENTS.md (status machine). Verify both mention `paused`

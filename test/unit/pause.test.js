@@ -44,6 +44,7 @@ test('a pause freezes room time, the raft, gas and the race clock, while snapsho
   assert.strictEqual(room.status, 'paused');
   room.step(DT);
   assert.deepStrictEqual(events.filter((e) => e.k === 'pause'), [{ k: 'pause', i: 0 }]);
+  assert.ok(room.seats.every((x) => !x.farting) && !room.sync, 'nobody sounds like pushing while paused');
   const before = { gt: room.gt, x: room.raft.x, y: room.raft.y, gas: room.seats.map((s) => s.gas), time: room.time };
   const sent = snapshots();
   run(room, 2);

@@ -138,6 +138,11 @@
   window.addEventListener('keydown', (e) => {
     if (e.target && e.target.tagName === 'INPUT') return;
     if (e.code === 'KeyM' && !e.repeat) { toggleMute(); return; }
+    if ((e.code === 'KeyP' || e.code === 'Escape') && !e.repeat && latest) {
+      if (racing(latest.st)) send({ t: 'pause' });
+      else if (e.code === 'KeyP' && latest.st === 'paused') send({ t: 'resume' });
+      return;
+    }
     if (!GAME_KEYS.includes(e.code)) return;
     e.preventDefault();
     keys.add(e.code);
@@ -180,7 +185,14 @@
   $('start').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('again').addEventListener('click', (e) => { send({ t: 'start' }); e.currentTarget.blur(); });
   $('retry').addEventListener('click', () => location.reload());
-  for (const id of ['sit', 'sit-results']) {
+  $('pause').addEventListener('click', (e) => { send({ t: 'pause' }); e.currentTarget.blur(); });
+  for (const t of ['resume', 'restart', 'stop']) $(t).addEventListener('click', (e) => { send({ t }); e.currentTarget.blur(); });
+  $('leave').addEventListener('click', (e) => {
+    wantSeat = false;
+    send({ t: 'leave' });
+    e.currentTarget.blur();
+  });
+  for (const id of ['sit', 'sit-results', 'sit-paused']) {
     $(id).addEventListener('click', (e) => {
       wantSeat = true;
       send({ t: 'join', name: myName, token });
@@ -243,6 +255,7 @@
 
   // What the screen shows: splash | lobby | race | results. Only setView() changes it.
   let view = 'splash';
+  let raceClock = 0, prevStatus = null;
   const racing = (st) => st === 'countdown' || st === 'running';
   function setView(v) {
     view = v;
@@ -251,18 +264,25 @@
     $('hud').hidden = view === 'splash';
     $('lobby').hidden = view !== 'lobby';
     $('results').hidden = view !== 'results';
+    $('paused').hidden = view !== 'paused';
   }
 
   let crewSig = '';
   function onSnapshot(m) {
     // game state; a finish event in this snapshot has already moved the view to results
     if (view !== 'splash') {
-      if (racing(m.st)) {
+      if (m.st === 'paused') {
+        if (view !== 'paused') setView('paused');
+      } else if (racing(m.st)) {
         if (view !== 'race') setView('race');
-      } else if (view === 'race') {
+      } else if (view === 'race' || view === 'paused') {
         setView('lobby');
       }
     }
+    // the race clock keeps its value through a pause and the countdown that resumes it
+    if (m.st === 'running' || m.st === 'paused') raceClock = m.tm;
+    else if (m.st === 'countdown' && (prevStatus === 'lobby' || prevStatus === 'finished')) raceClock = 0;
+    prevStatus = m.st;
 
     // crew
     const seated = m.s.some((s) => s && s[0] === myId);
@@ -282,6 +302,7 @@
         else if (s[0] === myId) li.className = 'me';
         crew.appendChild(li);
       });
+      $('pause-crew').innerHTML = crew.innerHTML;
       $('start').disabled = !seated;
       ensureSeatEls(m.s.length);
       m.s.forEach((s, i) => {
@@ -300,6 +321,10 @@
     const canSit = joined && !wantSeat && !seated && !racing(m.st) && m.s.filter(Boolean).length < T.MAX_SEATS;
     $('sit').hidden = !canSit;
     $('sit-results').hidden = !canSit;
+    $('sit-paused').hidden = !canSit;
+    $('leave').hidden = !seated;
+    for (const id of ['resume', 'restart', 'stop']) $(id).disabled = !seated;
+    $('pause').hidden = !(joined && seated && racing(m.st));
     $('solo-hint').hidden = m.s.filter(Boolean).length !== 1;
     $('sync').classList.toggle('on', !!m.sy && m.st !== 'countdown');
     cpEls.forEach((el, i) => el.classList.toggle('done', i <= m.cp));
@@ -318,6 +343,11 @@
         blip(660, 0.12, 'sine', 0.2);
         setTimeout(() => blip(990, 0.18, 'sine', 0.2), 110);
         break;
+      case 'pause': {
+        const seat = latest && latest.s[ev.i];
+        if (seat) toast(`${seat[1]} ha messo in pausa`, 2200);
+        break;
+      }
       case 'shart': {
         const seat = latest && latest.s[ev.i];
         if (!seat) break;
@@ -581,7 +611,8 @@
     const rg = performance.now() / 1000 + offset - 0.1;
     const first = snaps[0], last = snaps[snaps.length - 1];
     if (rg <= first.gt) return { a: first, b: first, f: 0, rg };
-    if (rg >= last.gt) return { a: last, b: last, f: 0, rg };
+    // past the newest snapshot the world waits for the server: this freezes obstacles in a pause
+    if (rg >= last.gt) return { a: last, b: last, f: 0, rg: last.gt };
     for (let i = snaps.length - 1; i > 0; i--) {
       if (snaps[i - 1].gt <= rg) {
         const a = snaps[i - 1], b = snaps[i];
@@ -909,7 +940,7 @@
     }
 
     if (latest) {
-      const run = latest.st === 'running' ? latest.tm + Math.max(0, rg - latest.gt) : latest.st === 'countdown' ? 0 : latest.tm;
+      const run = latest.st === 'running' ? latest.tm + Math.max(0, rg - latest.gt) : latest.st === 'countdown' ? raceClock : latest.tm;
       $('timer').textContent = fmt(run);
       const s = T.closest(raft.x, raft.y).s;
       $('progress-marker').style.bottom = `${Math.min(100, (100 * s) / T.FINISH_S)}%`;

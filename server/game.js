@@ -179,6 +179,9 @@ class Room {
   pause(client) {
     if (!this.racing() || !this.seated(client)) return;
     this.status = 'paused';
+    // nobody pushes while paused: clear the flags the frozen gas loop would otherwise keep
+    for (const seat of this.seats) if (seat) seat.farting = false;
+    this.sync = false;
     this.events.push({ k: 'pause', i: this.seatIndexOf(client) });
   }
 

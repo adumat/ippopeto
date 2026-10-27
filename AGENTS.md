@@ -34,6 +34,7 @@ Pushing below `SHART_GAS` (25) risks soiling yourself at `SHART_RATE` (1.45/s) �
 
 ## Seats and screens
 
+- Room states: `lobby → countdown → running → finished`, plus `paused`, reachable from countdown or running by any seated player. While paused, `step()` does not advance `gt`, so physics, gas, moving obstacles and the race clock all freeze, but snapshots keep flowing. `paused` is outside `racing()`, which is what lets seats be taken, left and compacted during a pause. Resume is a 3 s countdown without `resetRun()`; restart is `start()`; stop returns to the lobby with no result.
 - The raft has 2–6 seats: as many as people sitting, never fewer than 2. `Track.seatPositions(n)` places them evenly around the edge, symmetric about the bow, identically on server and client; the snapshot carries only the count. The list compacts outside a race and is frozen during one, so seat indices shift: find a player by id, never by index.
 - Thrust per hippo is `520 × √(4/N)`: total thrust grows with the square root of the crew, so 4 behave exactly as the original tuning.
 - A seat is free (`null`), taken, or **away**: its tab disconnected and has `IPPO_RESERVE_MS` (15 s) to come back. The seat is matched by a per-tab session token in sessionStorage, so a reload reclaims it too. An away hippo neither pushes nor counts for the sync bonus.
