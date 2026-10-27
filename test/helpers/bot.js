@@ -30,7 +30,9 @@ function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiu
     // a map may ask for a longer look-ahead (a sled must set up its bends early)
     const tp = T.pointAt(c.s + ((T.def.bot && T.def.bot.lookAhead) || 300));
     let off = 0;
-    const obs = [...T.ROCKS, ...T.barrelsAt(room.gt), ...T.crocsAt(room.gt)];
+    // a bomb whose shadow is showing is dodged like any obstacle
+    const bombs = (T.BOMBS || []).filter((b) => T.bombState(b, room.gt).left < T.BOMB_WARN).map((b) => ({ x: b.x, y: b.y, r: 60 }));
+    const obs = [...T.ROCKS, ...T.barrelsAt(room.gt), ...T.crocsAt(room.gt), ...bombs];
     for (const o of obs) {
       const oc = T.closest(o.x, o.y);
       if (oc.s > c.s - 50 && oc.s < c.s + 550) {

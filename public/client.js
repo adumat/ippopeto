@@ -13,6 +13,8 @@
   // sewer water from a jet: the same splats as the peto vestito, in green
   const SLIME = '#6f8a2a', SLIME_LIGHT = '#8fa83a';
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
+  // a fart set alight over a lava vent
+  const FIRE = ['#fff3b0', '#ffd23f', '#ff9f1c', '#ef4b3f'];
   const $ = (id) => document.getElementById(id);
   const canvas = $('game');
   const ctx = canvas.getContext('2d');
@@ -435,6 +437,19 @@
         thud(1);
         shake = 18;
         break;
+      case 'fire':
+        blip(140, 0.3, 'sawtooth', 0.15);
+        break;
+      case 'geyser':
+        toast('Il geyser vi ha spinti via', 1600);
+        thud(0.8);
+        shake = Math.max(shake, 14);
+        break;
+      case 'bomb':
+        toast('Bum! Una bomba di lava: si torna all’ultimo checkpoint', 2400);
+        thud(1);
+        shake = 22;
+        break;
       case 'bear':
         blip(196, 0.25, 'sawtooth', 0.18);
         break;
@@ -774,7 +789,7 @@
       seats = b.s.map((s, i) => {
         if (!s) return null;
         const pa = a.s[i] && a.s[i][0] === s[0] ? a.s[i][2] : s[2];
-        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6], colour: s[7], stained: (stains.get(s[0]) || 0) > performance.now() };
+        return { id: s[0], name: s[1], aim: pa + wrapA(s[2] - pa) * f, farting: !!s[4], tired: !!s[5], away: !!s[6], colour: s[7], fire: !!s[8], stained: (stains.get(s[0]) || 0) > performance.now() };
       });
       st = b.st;
     }
@@ -847,7 +862,7 @@
           vx: dx * sp + (Math.random() - 0.5) * 50,
           vy: dy * sp + (Math.random() - 0.5) * 50,
           age: 0, life: 0.8 + Math.random() * 0.5,
-          tint: Math.random() < 0.5 ? GAS : '#a9bd47',
+          tint: s.fire ? FIRE[Math.floor(Math.random() * FIRE.length)] : Math.random() < 0.5 ? GAS : '#a9bd47',
         });
       }
     });
@@ -930,6 +945,7 @@
     ctx.fillStyle = 'rgba(31,43,46,0.25)';
     ctx.fillRect(-h + 8, -h + 10, S, S);
     if (course.def.vehicle === 'sled') drawSled(S, h);
+    else if (course.def.vehicle === 'stone') drawStone(S, h);
     else drawLogs(S, h);
 
     const seatPos = T.seatPositions(seats.length);
@@ -975,6 +991,33 @@
       ctx.stroke();
     }
     // bow
+    ctx.fillStyle = PAPER;
+    ctx.beginPath();
+    ctx.moveTo(0, -h - 20);
+    ctx.lineTo(-10, -h - 6);
+    ctx.lineTo(10, -h - 6);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // the lava's stone raft: wood would burn
+  function drawStone(S, h) {
+    ctx.fillStyle = '#6f6663';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-h - 4, -h - 4, S + 8, S + 8, 22);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = '#4e4542';
+    ctx.beginPath();
+    ctx.moveTo(-h + 4, -8);
+    ctx.lineTo(h - 4, 6);
+    ctx.moveTo(-14, -h + 4);
+    ctx.lineTo(-4, h - 4);
+    ctx.moveTo(30, -h + 6);
+    ctx.lineTo(24, 0);
+    ctx.stroke();
     ctx.fillStyle = PAPER;
     ctx.beginPath();
     ctx.moveTo(0, -h - 20);

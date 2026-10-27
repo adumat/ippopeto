@@ -5,7 +5,7 @@
   'use strict';
 
   // Maps in the order the selector lists them. A map is listed only once it is playable.
-  const ORDER = ['fiume', 'fogne', 'fiordo'];
+  const ORDER = ['fiume', 'fogne', 'fiordo', 'lava'];
   const isNode = typeof module !== 'undefined' && module.exports;
   const extra = {};
   const defOf = (id) => extra[id] || (isNode ? require(`./maps/${id}.js`) : (root.IppoMaps || {})[id]);
@@ -17,6 +17,7 @@
 
   const SUB = 12;
   const BEAR_WARN = 1, BEAR_SPEED = 900;
+  const GEYSER_BUILD = 0.6, GEYSER_ERUPT = 1, BOMB_WARN = 1.5;
 
   // mulberry32: generated maps must never use Math.random, or client and server disagree
   function rng(seed) {
@@ -190,6 +191,34 @@
       return { x: b.x + ((line.ex - b.x) * d) / line.len, y: b.y + ((line.ey - b.y) * d) / line.len, warn: false };
     }
 
+    // Vents: glowing pools on the lava that set a pushing hippo's fart alight.
+    const VENTS = (obs.vents || []).map(([u, off, r]) => {
+      const { x, y } = place(u, off);
+      return { x, y, r };
+    });
+    // Geysers build up for GEYSER_BUILD s, then erupt for GEYSER_ERUPT s, each to its own period.
+    const GEYSERS = (obs.geysers || []).map(([u, off, r, period, phase]) => {
+      const { x, y, p } = place(u, off);
+      return { x, y, r, period, phase, nx: p.nx, ny: p.ny, side: Math.sign(off) || 1 };
+    });
+    const geyserState = (g, t) => {
+      const q = (((t + g.phase) % g.period) + g.period) % g.period;
+      const n = Math.floor((t + g.phase) / g.period);
+      const build = g.period - GEYSER_ERUPT - GEYSER_BUILD;
+      return { stage: q < build ? 'rest' : q < build + GEYSER_BUILD ? 'build' : 'erupt', q, n };
+    };
+    // Lava bombs land every `period` s; the shadow shows for BOMB_WARN s before each impact.
+    const BOMBS = (obs.bombs || []).map(([u, off, period, phase]) => {
+      const { x, y } = place(u, off);
+      return { x, y, period, phase };
+    });
+    // time to the next impact, and that impact's number
+    const bombState = (b, t) => {
+      const k = Math.ceil((t - b.phase) / b.period);
+      const impact = b.phase + k * b.period;
+      return { left: impact - t, n: k };
+    };
+
     const barrels = obs.barrels || [], crocs = obs.crocs || [];
     return {
       id: def.id,
@@ -211,6 +240,12 @@
         const { x, y } = place(u, off);
         return { x, y, r, k };
       }),
+      VENTS,
+      GEYSERS,
+      geyserState,
+      BOMBS,
+      bombState,
+      BOMB_WARN,
       SLOPES,
       TILES,
       BEARS,

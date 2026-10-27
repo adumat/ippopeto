@@ -3,6 +3,7 @@
 //   force(room, dt)            extra forces on the vehicle, after thrust and current
 //   collide(room)              contacts after the built-in obstacles
 //   gas(room, seat)            { regen, shart } multipliers for one seat this step
+//   thrust(room, seat, i)      multiplier on one pushing seat's thrust this step
 //   onRespawn(room)            reset rule state when the vehicle is sent back or a run starts
 //   snapshot(room)             extra snapshot fields, e.g. { ic: [...] }
 const RULES = {
@@ -14,6 +15,10 @@ const RULES = {
   snow: require('./snow.js'),
   'thin-ice': require('./thin-ice.js'),
   bears: require('./bears.js'),
+  vents: require('./vents.js'),
+  geysers: require('./geysers.js'),
+  bombs: require('./bombs.js'),
+  heat: require('./heat.js'),
 };
 
 function rulesFor(def) {

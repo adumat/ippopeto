@@ -16,7 +16,7 @@ const GAS_RECOVER = 35; // once empty, gas must refill to this before pushing ag
 const SYNC_MULT = 1.35;
 const RESTITUTION = 0.45;
 // How each vehicle turns for the same push, relative to the raft
-const VEHICLES = { raft: { turn: 1 }, sled: { turn: 0.5 } };
+const VEHICLES = { raft: { turn: 1 }, stone: { turn: 1 }, sled: { turn: 0.5 } };
 const COUNTDOWN = 3;
 // Peto vestito: pushing below SHART_GAS risks soiling yourself at SHART_RATE per second
 // times (1 - gas/SHART_GAS)^2. Forcing a full drain to zero gives ~35 %, stopping at 15 ~3 %.
@@ -75,6 +75,7 @@ class Room {
       s.gas = GAS_MAX;
       s.exhausted = false;
       s.farting = false;
+      s.fireUntil = 0;
       s.aim = Math.PI / 2;
     }
   }
@@ -378,9 +379,11 @@ class Room {
     const positions = Track.seatPositions(this.seats.length);
     this.seats.forEach((s, i) => {
       if (!s || !s.farting) return;
+      let mult = 1;
+      for (const r of this.rules) if (r.thrust) mult *= r.thrust(this, s, i);
       // the rear points along aim, thrust goes the opposite way
-      const lfx = -Math.cos(s.aim) * force;
-      const lfy = -Math.sin(s.aim) * force;
+      const lfx = -Math.cos(s.aim) * force * mult;
+      const lfy = -Math.sin(s.aim) * force * mult;
       const [lx, ly] = positions[i];
       const wfx = lfx * cos - lfy * sin, wfy = lfx * sin + lfy * cos;
       const rx = lx * cos - ly * sin, ry = lx * sin + ly * cos;
@@ -488,7 +491,12 @@ class Room {
       mp: this.mapId,
       sd: this.seed,
       b: this.bites,
-      s: this.seats.map((s) => (s ? [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0, s.away ? 1 : 0, s.colour] : null)),
+      // a ninth field, 1, only while that hippo's fart is alight
+      s: this.seats.map((s) => {
+        if (!s) return null;
+        const e = [s.id, s.name, r3(s.aim), Math.round(s.gas), s.farting ? 1 : 0, s.exhausted ? 1 : 0, s.away ? 1 : 0, s.colour];
+        return s.fireUntil > this.gt ? [...e, 1] : e;
+      }),
       ...extra,
       ev: this.events,
     });
