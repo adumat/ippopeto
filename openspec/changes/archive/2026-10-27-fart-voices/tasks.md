@@ -12,9 +12,9 @@
 
 - [x] 3.1 Add the unlock (capture listener, audio session, silent loop) and decode all clips into buffers once unlocked. Verify in the browser that after one click `AudioContext.state` is `running` and 17 buffers are decoded
 - [x] 3.2 Replace `startFart`/`stopFart` with chained random clips per seat (`SEAT_RATE` × random variation, 60 ms fade on stop), keeping `updateVoices` as the driver and mute on the master gain. Verify with an e2e that a pushing seat fetches sounds with no console errors, and by hand that two pushes sound different
-- [ ] 3.3 Keep every other sound synthesized and unchanged. Verify by ear: countdown, checkpoint, chomp, thud and finish all still play
+- [x] 3.3 Keep every other sound synthesized and unchanged. Verify by ear: countdown, checkpoint, chomp, thud and finish all still play
 
 ## 4. Docs and release
 
 - [x] 4.1 Update the README (sounds, credits) and AGENTS.md (where sounds live, the bundled-audio rule). Verify both mention `CREDITS.md`
-- [ ] 4.2 Have the owner play one race on a phone with the mute switch on. Verify that every push is audible
+- [x] 4.2 Have the owner play one race on a phone with the mute switch on. Verify that every push is audible

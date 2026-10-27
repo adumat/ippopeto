@@ -57,19 +57,6 @@ The colours SHALL be orange `#ff9f1c`, pink `#e0479e`, yellow `#ffd23f`, violet 
 - **WHEN** the orange player leaves the lobby
 - **THEN** everyone else keeps their colour, and the next person to sit gets orange
 
-### Requirement: Synthesized sound
-
-All sound SHALL be synthesized in the browser, with no audio files:
-- a fart voice per seat, with a distinct timbre per seat, playing while that hippo pushes;
-- blips for countdown, "Via!" and checkpoints;
-- a chomp for bites, a filtered thud scaled by impact for bumps, an arpeggio at the finish.
-
-`M` or the speaker button SHALL toggle mute, and the choice SHALL be remembered in the browser.
-
-#### Scenario: Muted player
-- **WHEN** a player muted the game last time
-- **THEN** it starts muted
-
 ### Requirement: Game name
 
 The game SHALL be called "Ippopeto" in the browser tab title and in the splash title. The splash title SHALL keep its gas trail.
@@ -85,3 +72,63 @@ A hippo whose player is away SHALL stay on the raft, drawn faded (more than an e
 #### Scenario: Teammate drops
 - **WHEN** a teammate's connection drops
 - **THEN** everyone sees their hippo fade and "torna subito" on their seat card until they return or the seat frees up
+
+### Requirement: Game sounds
+
+Blips for the countdown, "Via!" and checkpoints, the chomp for bites, the thud scaled by impact for bumps and the finish arpeggio SHALL be synthesized in the browser. `M` or the speaker button SHALL toggle mute for every sound, fart voices included, and the choice SHALL be remembered in the browser.
+
+#### Scenario: Muted player
+- **WHEN** a player muted the game last time
+- **THEN** it starts muted
+
+### Requirement: Fart voices
+
+While a hippo pushes, every player SHALL hear a fart recording for it, picked at random from the game's set, with speed and pitch varied on each push around a per-seat offset. While the push is held, further random recordings SHALL follow without gaps. When the push stops, the sound SHALL fade out within about 60 ms.
+
+#### Scenario: Two pushes in a row
+- **WHEN** the same hippo pushes twice
+- **THEN** the two pushes sound different
+
+#### Scenario: Long push
+- **WHEN** a hippo pushes for three seconds
+- **THEN** recordings follow one another for the whole push and stop when it ends
+
+### Requirement: Sound on phones
+
+Sound SHALL start working from the player's first completed tap, and SHALL play on an iPhone whose mute switch is on, where the browser allows it.
+
+#### Scenario: iPhone on silent
+- **WHEN** a player on an iPhone with the mute switch on boards and pushes
+- **THEN** they hear the fart
+
+### Requirement: Everyone sees the peto vestito
+
+On a peto vestito, every player SHALL see four to six brown splats in two tones covering part of the screen. They SHALL stay for about 4 seconds, then drip down and fade. With reduced motion requested, they SHALL fade without dripping. A toast SHALL say "<name> se l’è fatta addosso".
+
+#### Scenario: Teammate soils itself
+- **WHEN** Giulia's hippo has a peto vestito
+- **THEN** every screen gets splats and the toast "Giulia se l’è fatta addosso"
+
+### Requirement: The culprit stays marked
+
+The hippo that had a peto vestito SHALL be drawn with a brown stain on its rear for about 10 seconds.
+
+#### Scenario: Finding the culprit
+- **WHEN** the splats have dripped away
+- **THEN** the culprit's hippo still shows the stain for a few more seconds
+
+### Requirement: Peto vestito sound
+
+A peto vestito SHALL play one of the bundled vestito recordings, varied like the fart voices.
+
+#### Scenario: Hearing it
+- **WHEN** a peto vestito happens
+- **THEN** every player hears a vestito recording
+
+### Requirement: Brown is reserved for the peto vestito
+
+The palette SHALL gain brown (`#6b4423`, with a lighter tone for depth), used only for the peto vestito splats and stain.
+
+#### Scenario: New element
+- **WHEN** someone adds a brown element unrelated to the peto vestito
+- **THEN** it violates this requirement
