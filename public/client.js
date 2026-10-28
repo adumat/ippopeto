@@ -513,7 +513,18 @@
   // ---------- audio ----------
   let audio = null, master = null, noiseBuf = null;
   let muted = store.get('ippo-muted') === '1';
-  $('mute').textContent = muted ? '🔇' : '🔊';
+  const storedVolume = parseInt(store.get('ippo-volume'), 10);
+  let volume = storedVolume >= 0 && storedVolume <= 100 ? storedVolume : 40;
+  const FULL_GAIN = 0.7;
+  const masterGain = () => (muted ? 0 : FULL_GAIN * volume / 100);
+  function showVolume() {
+    const icon = muted || volume === 0 ? '🔇' : '🔊';
+    $('mute').textContent = icon;
+    $('volume-mute').textContent = icon;
+    $('volume-range').value = volume;
+    $('volume-value').textContent = `${volume}%`;
+  }
+  showVolume();
   const voices = new Map(); // seat id -> playing voice
 
   function initAudio() {
@@ -524,7 +535,7 @@
       return;
     }
     master = audio.createGain();
-    master.gain.value = muted ? 0 : 0.7;
+    master.gain.value = masterGain();
     master.connect(audio.destination);
     noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
     const d = noiseBuf.getChannelData(0);
@@ -561,13 +572,38 @@
     }
   }
   for (const ev of ['touchend', 'click', 'keydown']) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
+  function applyVolume() {
+    showVolume();
+    if (master) master.gain.value = masterGain();
+  }
   function toggleMute() {
     muted = !muted;
     store.set('ippo-muted', muted ? '1' : '0');
-    $('mute').textContent = muted ? '🔇' : '🔊';
-    if (master) master.gain.value = muted ? 0 : 0.7;
+    applyVolume();
   }
-  $('mute').addEventListener('click', (e) => { initAudio(); toggleMute(); e.currentTarget.blur(); });
+  function setVolumePanel(open) {
+    $('volume').hidden = !open;
+    $('mute').setAttribute('aria-expanded', String(open));
+  }
+  $('mute').addEventListener('click', (e) => {
+    initAudio();
+    setVolumePanel($('volume').hidden);
+    e.currentTarget.blur();
+  });
+  $('volume-mute').addEventListener('click', () => toggleMute());
+  $('volume-range').addEventListener('input', (e) => {
+    volume = Number(e.target.value);
+    store.set('ippo-volume', String(volume));
+    // moving the slider is a clear wish to hear the game
+    if (muted && volume > 0) toggleMute();
+    else applyVolume();
+  });
+  $('volume').addEventListener('keydown', (e) => {
+    if (e.code === 'Escape') { setVolumePanel(false); e.stopPropagation(); }
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!$('volume').hidden && !$('volume').contains(e.target) && e.target !== $('mute')) setVolumePanel(false);
+  });
 
   function blip(freq, dur, type, gain, slideTo) {
     if (!audio) return;

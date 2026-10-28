@@ -91,7 +91,12 @@
     <button data-k="right" aria-label="Gira a destra">⟳</button>
   </div>
 
-  <button id="mute" class="icon-btn" aria-label="Audio on/off" title="Audio (M)">🔊</button>
+  <button id="mute" class="icon-btn" aria-label="Volume" aria-expanded="false" aria-controls="volume" title="Volume (M per silenziare)">🔊</button>
+  <div id="volume" class="card" hidden>
+    <button id="volume-mute" class="btn" aria-label="Audio on/off">🔊</button>
+    <input id="volume-range" type="range" min="0" max="100" step="5" aria-label="Volume">
+    <output id="volume-value" for="volume-range">40%</output>
+  </div>
   <button id="pause" class="icon-btn" aria-label="Metti in pausa" title="Pausa (P)" hidden>⏸</button>
   <div id="conn" hidden>Connessione persa, riprovo…</div>
 

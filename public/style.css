@@ -38,6 +38,19 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; t
 #paused { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 420px; display: grid; gap: 12px; }
 #paused h2, #paused .hint { margin: 0; }
 #pause { right: 72px; }
+#volume {
+  right: 16px;
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  width: 260px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 5;
+}
+#volume-mute { padding: 4px 10px; font-size: 18px; }
+#volume-range { flex: 1; min-width: 0; accent-color: var(--ink); height: 28px; }
+#volume-value { width: 3.2em; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 #denied { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 400px; }
 
 .title {

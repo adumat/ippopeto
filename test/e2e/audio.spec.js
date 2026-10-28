@@ -18,3 +18,22 @@ test('boarding loads every fart clip and pushing plays without errors', async ({
   await page.waitForTimeout(300);
   expect(errors).toEqual([]);
 });
+
+test('the volume starts at 40 % and is remembered', async ({ page }) => {
+  await board(page, roomName('volume'), 'Lia');
+  await expect(page.locator('#volume')).toBeHidden();
+  await page.locator('#mute').click();
+  await expect(page.locator('#volume')).toBeVisible();
+  await expect(page.locator('#volume-range')).toHaveValue('40');
+  await expect(page.locator('#volume-value')).toHaveText('40%');
+  await page.locator('#volume-range').fill('70');
+  await expect(page.locator('#volume-value')).toHaveText('70%');
+  await page.mouse.click(200, 400);
+  await expect(page.locator('#volume')).toBeHidden();
+
+  await page.reload();
+  await page.locator('#mute').click();
+  await expect(page.locator('#volume-range')).toHaveValue('70');
+  await page.locator('#volume-range').press('Escape');
+  await expect(page.locator('#volume')).toBeHidden();
+});
