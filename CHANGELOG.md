@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/adumat/ippopeto/compare/v0.7.0...v0.8.0) (2026-10-28)
+
+
+### Features
+
+* add a volume slider behind the speaker button, starting at 40 % ([f4de561](https://github.com/adumat/ippopeto/commit/f4de561dbf467d4c0144b8b55b1af8430029cd8f))
+
 ## [0.7.0](https://github.com/adumat/ippopeto/compare/v0.6.0...v0.7.0) (2026-10-28)
 
 
