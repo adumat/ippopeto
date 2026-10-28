@@ -1,7 +1,7 @@
 # product/map-fogne Specification
 
 ## Purpose
-The Fogne map: a narrow sewer canal on the raft, with steam jets, intakes and methane pockets.
+The Fogne map: a narrow sewer canal on the raft, with jets, intakes, methane clouds, ducks and rats.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # product/map-grotta Specification
 
 ## Purpose
-The Grotta map: a generated dark cave lit only around the raft, with bats.
+The Grotta map: a new dark cave every race, with lights that help and cave obstacles.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # product/map-lava Specification
 
 ## Purpose
-The Lava map: a stone raft on a lava river, with vents, geysers, volcanic bombs and heat.
+The Lava map: a stone raft on a lava river, with vents that ignite farts, geysers, lava bombs and heat near the banks.
 
 ## Requirements
 
