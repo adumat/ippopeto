@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/adumat/ippopeto/compare/v0.6.0...v0.7.0) (2026-10-28)
+
+
+### Features
+
+* add the Fiordo map: a sled on ice, slopes, snow, thin ice, penguins and bears ([fd66a0c](https://github.com/adumat/ippopeto/commit/fd66a0c95bffb3d2b37a9528377db41d47057a97))
+* add the Fiume di lava: stone raft, burning farts, geysers, bombs and salamanders ([a2c57a1](https://github.com/adumat/ippopeto/commit/a2c57a1c63375bc7608b5ac0004f01fd9bc55bb3))
+* add the Fogne map: jets, intakes, methane clouds, ducks and rats ([f4d5376](https://github.com/adumat/ippopeto/commit/f4d53764fdbde1adcbf05e61414ef1d6a002d0c0))
+* add the Grotta buia: a cave generated at every start, in the dark ([fa7ebfb](https://github.com/adumat/ippopeto/commit/fa7ebfbe7cce3e8eba4915ef04b70e41c958a765))
+* add the Strada delle stelle: a flying saucer, the void, jumps, turbo, planets and comets ([033eedb](https://github.com/adumat/ippopeto/commit/033eedba12224e48c830aacc99071fa4616632f8))
+* choose the map in the lobby, with best times per map ([b581a89](https://github.com/adumat/ippopeto/commit/b581a89ae560da0da0182ec87debac0735e6822d))
+
 ## [0.6.0](https://github.com/adumat/ippopeto/compare/v0.5.1...v0.6.0) (2026-10-27)
 
 
