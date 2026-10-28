@@ -11,4 +11,4 @@
 ## 2. Client
 
 - [x] 2.1 Draw the Fiordo: ice, snow, slope arrows, runner grooves, sled, thin ice states, blocks, penguins, bears with warning line. Verify an e2e race on the Fiordo with no console errors
-- [ ] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves
+- [x] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves

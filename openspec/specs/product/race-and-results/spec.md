@@ -55,11 +55,15 @@ A celebratory arpeggio SHALL play. Someone who boards after the finish SHALL see
 
 ### Requirement: Best times per room
 
-Each room SHALL keep its five fastest finishes, each with time, crew names joined by commas, bites and sync percentage. They SHALL be shown in the results and SHALL be lost when the room is discarded.
+Each room SHALL keep, for each map, its five fastest finishes on that map, each with time, crew names joined by commas, bites and sync percentage. A generated map SHALL have one list, whatever the layout. The results card SHALL name the map and show that map's list. All lists SHALL be lost when the room is discarded.
 
 #### Scenario: Sixth finish
-- **WHEN** a crew finishes slower than all five best times
+- **WHEN** a crew finishes slower than all five best times on that map
 - **THEN** the list does not change
+
+#### Scenario: Another map
+- **WHEN** a crew finishes the Fogne after three Fiume races
+- **THEN** the results card says "Fogne della città" and lists only the Fogne time
 
 ### Requirement: Another round
 
@@ -84,3 +88,11 @@ The results card SHALL report the race's peti vestiti, singular or plural ("1 pe
 #### Scenario: A messy race
 - **WHEN** a crew finishes after two peti vestiti
 - **THEN** the results card says "2 peti vestiti"
+
+### Requirement: Send-backs in the results
+
+Instead of a single bite count, the results card SHALL list every cause its map has for being sent back to a checkpoint, with the count for the race, zero included, in the wording the map gives, singular or plural. On the Fiume the only cause SHALL stay "morso di coccodrillo".
+
+#### Scenario: Clean race on the Fiume
+- **WHEN** a crew finishes the Fiume after two bites
+- **THEN** the results card says "2 morsi di coccodrillo"

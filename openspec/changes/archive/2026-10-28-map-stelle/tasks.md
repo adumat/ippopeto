@@ -9,4 +9,4 @@
 ## 2. Client
 
 - [x] 2.1 Draw the Stelle: space, track, rails, ramps, holes, turbo, planets, comets, the saucer with its dome and flight scale. Verify an e2e race on the Stelle with no console errors
-- [ ] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves
+- [x] 2.2 Send the owner screenshots on desktop and phone. Verify the owner approves

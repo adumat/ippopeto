@@ -9,4 +9,4 @@
 ## 2. Client
 
 - [x] 2.1 Draw the cave and the darkness mask with glow, gas light, mushrooms and fireflies. Verify an e2e race on the Grotta with no console errors and a frame time under 16 ms on the phone profile (measured 8.3 ms median at 390×844, 3× pixels, on a desktop browser, the same as the Fiume)
-- [ ] 2.2 Tune the darkness with the owner in a field test. Verify the owner approves the radius
+- [x] 2.2 Tune the darkness with the owner in a field test. Verify the owner approves the radius

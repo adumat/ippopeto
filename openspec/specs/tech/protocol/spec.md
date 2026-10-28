@@ -169,3 +169,55 @@ A peto vestito SHALL be announced as the event `shart{i}` in the next snapshot's
 #### Scenario: Event
 - **WHEN** seat 2 soils itself
 - **THEN** every client receives `{k:'shart', i:2}` in the next snapshot
+
+### Requirement: Map choice
+
+`{t:'map', id}` SHALL set the room's map when sent by a seated client while the room is in `lobby` or `finished`, and `id` names a listed map; anything else SHALL be ignored. Every snapshot SHALL carry the current map id as `mp` and the layout seed as `sd` (0 for fixed maps). A client SHALL rebuild its course whenever either changes.
+
+#### Scenario: Map picked mid-race
+- **WHEN** a seated client sends `{t:'map', id:'fogne'}` during a race
+- **THEN** nothing changes
+
+#### Scenario: New layout
+- **WHEN** a race starts on a generated map
+- **THEN** the next snapshot carries a new `sd`, and every client rebuilds the same course
+
+### Requirement: Fogne events
+
+The server SHALL emit `jet{x, y}` when a jet hits the vehicle and `suck` when an intake sends it back. Pipe and duck motion SHALL be derived from room time like other moving obstacles and SHALL NOT be sent.
+
+#### Scenario: Splash on every screen
+- **WHEN** a jet hits the raft
+- **THEN** every client receives `jet` and draws the green splashes
+
+### Requirement: Fiordo events and state
+
+The server SHALL emit `stuck` when the sled enters snow, `stroke{n}` for each counted stroke, `free` when it gets out, `bear{b}` when bear `b` starts its warning, and `fall` when thin ice breaks under the sled. Snapshots on the Fiordo SHALL carry the cracked and broken thin-ice tiles as `ic`, a compact list of tile indexes with their state, only while any tile is not intact.
+
+#### Scenario: Late joiner sees the holes
+- **WHEN** a spectator joins after a bridge broke
+- **THEN** its first snapshot shows the broken tiles
+
+### Requirement: Lava events
+
+The server SHALL emit `fire{i}` when hippo `i` ignites, and `bomb` when a bomb hits the raft. Seat entries SHALL carry a flag while that hippo's fart is alight. Geyser and bomb timing SHALL be derived from room time and SHALL NOT be sent.
+
+#### Scenario: Flames for everyone
+- **WHEN** hippo 2 ignites over a vent
+- **THEN** every client draws its fart as flame for 1 s
+
+### Requirement: Grotta events
+
+The server SHALL emit `bats` when a swarm hits the raft. Swarm and fish motion SHALL be derived from room time and the seed and SHALL NOT be sent.
+
+#### Scenario: Blinded together
+- **WHEN** a swarm hits the raft
+- **THEN** every client receives `bats` and covers its view for 2 s
+
+### Requirement: Stelle state and events
+
+On the Stelle, snapshots SHALL carry the saucer's height above the track as `z` while it is in the air, and omit it otherwise. The server SHALL emit `fall` when the saucer falls and `turbo` when it crosses a pad. Comet motion SHALL be derived from room time and SHALL NOT be sent.
+
+#### Scenario: Watching a jump
+- **WHEN** the saucer is in the air
+- **THEN** every client draws it larger, with the shadow offset by `z`
