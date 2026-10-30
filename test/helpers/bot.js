@@ -6,9 +6,10 @@ const { Room } = require('../../server/game.js');
 const Track = require('../../public/track.js');
 const { seeded } = require('./rng.js');
 
-function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiume' }) {
+function runCrew({ players, smart = true, maxSeconds = 400, seed = 1, map = 'fiume', ippo = false }) {
   const room = new Room('bot', { random: seeded(seed) });
   room.useMap(map, seed);
+  room.ippo = ippo;
   room.resetRun();
   const events = [];
   room.flush = function flush() {

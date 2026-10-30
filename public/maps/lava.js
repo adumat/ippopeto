@@ -65,6 +65,10 @@
       bomb: ['colpo di lava', 'colpi di lava'],
     },
     hint: 'Spingete sopra gli sfiati: il peto prende fuoco e spinge il doppio. Occhio alle ombre: arriva una bomba di lava. Vicino alle sponde il gas si ricarica prima.',
+    ippo: {
+      causes: { salamander: ['leccata di salamandra', 'leccate di salamandra'] },
+      hint: 'Spingete sopra gli sfiati: il getto prende fuoco e spinge il doppio. Occhio alle ombre: arriva una bomba di lava. Vicino alle sponde il serbatoio si ricarica prima.',
+    },
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = def;

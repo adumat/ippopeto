@@ -65,6 +65,10 @@
     biter: 'fish',
     causes: { fish: ['morso di pesce cieco', 'morsi di pesce cieco'] },
     hint: 'Al buio si vede solo vicino alla zattera e dove c’è gas: per far luce bisogna spingere. I funghi segnano i checkpoint, le lucciole le curve. La grotta cambia a ogni gara.',
+    ippo: {
+      causes: { fish: ['pesce palpatore', 'pesci palpatori'] },
+      hint: 'Al buio si vede solo vicino alla zattera e dove arriva il getto: per far luce bisogna spingere. I funghi segnano i checkpoint, le lucciole le curve. La grotta cambia a ogni gara.',
+    },
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = def;

@@ -59,6 +59,7 @@
     rules: ['sled', 'slopes', 'snow', 'thin-ice', 'bears'],
     causes: { water: ['caduta in acqua', 'cadute in acqua'], bear: ['morso d’orso', 'morsi d’orso'] },
     hint: 'Lo slittino gira piano: le curve si preparano prima. Nella neve ci si incaglia e si esce a colpi, spingendo tutti insieme. Il ghiaccio sottile cede dopo un attimo.',
+    ippo: { causes: { bear: ['abbraccio d’orso da dietro', 'abbracci d’orso da dietro'] } },
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = def;

@@ -24,7 +24,13 @@ const SHART_GAS = 25;
 const SHART_RATE = 1.45;
 const SNAPSHOT_EVERY = 3; // 60 Hz ticks -> 20 Hz snapshots
 const RESERVE_MS = Number(process.env.IPPO_RESERVE_MS || 15000);
+// Ippompieri mode: at every checkpoint the fire captain sprays for SPRAY_TIME seconds,
+// shoving the vehicle a new random way every SPRAY_STEP with SPRAY_FORCE.
+const SPRAY_TIME = 3;
+const SPRAY_STEP = 0.25;
+const SPRAY_FORCE = 0.15 * FART_FORCE;
 
+const frac = (v) => v - Math.floor(v);
 const r1 = (v) => Math.round(v * 10) / 10;
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
@@ -48,6 +54,7 @@ class Room {
     this.events = [];
     this.emptySince = Date.now();
     this.lastBump = 0;
+    this.ippo = false;
     this.useMap(Track.DEFAULT_MAP, 0);
     this.resetRun();
   }
@@ -65,6 +72,7 @@ class Room {
     this.raft = { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 };
     for (const r of this.rules) if (r.onRespawn) r.onRespawn(this);
     this.lastCp = -1;
+    this.spray = null;
     this.bites = 0; // every send-back during the race, whatever its cause
     this.backs = {}; // cause -> count, worded by the map in the results
     this.time = 0;
@@ -236,6 +244,12 @@ class Room {
     this.compact();
   }
 
+  // The Ippompieri mode follows the map's rules: any seated player, between races.
+  setMode(client, on) {
+    if ((this.status !== 'lobby' && this.status !== 'finished') || !this.seated(client)) return;
+    this.ippo = !!on;
+  }
+
   newSeed() {
     return 1 + Math.floor(this.random() * 2147483646);
   }
@@ -253,6 +267,7 @@ class Room {
   respawn(s) {
     const p = this.course.pointAt(s);
     Object.assign(this.raft, { x: p.x, y: p.y, a: Math.atan2(p.tx, -p.ty), vx: 0, vy: 0, w: 0 });
+    this.spray = null;
     for (const r of this.rules) if (r.onRespawn) r.onRespawn(this);
   }
 
@@ -421,6 +436,23 @@ class Room {
       }
     }
 
+    // the fire captain's spray: a held shove whose direction changes every SPRAY_STEP
+    if (this.spray && !flying) {
+      if (this.gt >= this.spray.until) this.spray = null;
+      else {
+        if (this.gt >= this.spray.next) {
+          // its own dice, so the captain never shifts the room's other random draws
+          this.spray.n++;
+          const a = 2 * Math.PI * frac(Math.sin(this.seed * 12.9898 + this.lastCp * 78.233 + this.spray.n * 37.719) * 43758.5453);
+          this.spray.fx = Math.cos(a) * SPRAY_FORCE;
+          this.spray.fy = Math.sin(a) * SPRAY_FORCE;
+          this.spray.next = this.gt + SPRAY_STEP;
+        }
+        fx += this.spray.fx;
+        fy += this.spray.fy;
+      }
+    }
+
     const drag = flying ? 0 : surface.drag + surface.over * Math.max(0, Math.hypot(R.vx - wx, R.vy - wy) - surface.cruise);
     R.vx += (fx / MASS - drag * (R.vx - wx)) * dt;
     R.vy += (fy / MASS - drag * (R.vy - wy)) * dt;
@@ -464,6 +496,10 @@ class Room {
       if (next < C.CHECKPOINTS.length && s >= C.CHECKPOINTS[next]) {
         this.lastCp = next;
         this.events.push({ k: 'cp', i: next });
+        if (this.ippo) {
+          this.spray = { until: this.gt + SPRAY_TIME, next: this.gt, n: 0, fx: 0, fy: 0 };
+          this.events.push({ k: 'spray', d: SPRAY_TIME });
+        }
       }
       if (s >= C.FINISH_S && this.lastCp === C.CHECKPOINTS.length - 1) {
         this.status = 'finished';
@@ -498,6 +534,7 @@ class Room {
       cp: this.lastCp,
       mp: this.mapId,
       sd: this.seed,
+      ip: this.ippo ? 1 : 0,
       b: this.bites,
       // a ninth field, 1, only while that hippo's fart is alight
       s: this.seats.map((s) => {

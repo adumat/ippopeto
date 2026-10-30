@@ -16,7 +16,8 @@
   <div id="hud" hidden>
     <div id="timer" aria-live="off">0:00.0</div>
     <div id="toast" aria-live="polite"></div>
-    <div id="sync">Tutti insieme!</div>
+    <div id="sync" data-ippo="Venite insieme!">Tutti insieme!</div>
+    <div id="vm18" aria-hidden="true">VM18<small>consensuale</small></div>
     <div id="progress" aria-hidden="true"><div id="progress-marker">🦛</div></div>
     <div id="seats"></div>
   </div>
@@ -35,48 +36,56 @@
   </section>
 
   <aside id="lobby" class="card" hidden>
+    <h1 class="ippo-title ippo-only">Ippompieri: spingono, sempre, forte</h1>
     <div id="maps" class="maps" aria-label="Mappa"></div>
-    <h2>Equipaggio</h2>
+    <button id="ippo" class="btn ippo-switch" aria-pressed="false">Ippompieri (VM18)</button>
+    <h2 data-ippo="L’ammucchiata">Equipaggio</h2>
     <ol id="crew"></ol>
     <div class="row">
       <button id="copy-link" class="btn">Copia il link</button>
-      <button id="start" class="btn primary">Si parte</button>
-      <button id="sit" class="btn primary" hidden>Siediti</button>
+      <button id="start" class="btn primary" data-ippo="Su gli idranti!">Si parte</button>
+      <button id="sit" class="btn primary" hidden data-ippo="Mi unisco all’ammucchiata">Siediti</button>
     </div>
-    <p id="solo-hint" class="solo" hidden>Da soli si gira in tondo: invita qualcuno con il link.</p>
+    <p id="solo-hint" class="solo" hidden data-ippo="Da soli non è la stessa cosa. Invita qualcuno.">Da soli si gira in tondo: invita qualcuno con il link.</p>
     <dl class="keys">
-      <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd>giri il sedere (anche con le frecce)</dd>
-      <dt><kbd>Spazio</kbd></dt><dd>spingi, finché c'è gas</dd>
+      <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd data-ippo="mostri il lato B (anche con le frecce)">giri il sedere (anche con le frecce)</dd>
+      <dt><kbd>Spazio</kbd></dt><dd data-ippo="spingi finché ti regge">spingi, finché c'è gas</dd>
     </dl>
     <p class="hint">Spingendo tutti nello stesso istante la spinta cresce. <span id="map-hint"></span></p>
   </aside>
 
   <section id="paused" class="card" hidden>
-    <h2>In pausa</h2>
+    <h2 data-ippo="Pausa sigaretta">In pausa</h2>
     <ol id="pause-crew" class="crew-list"></ol>
     <div class="row">
       <button id="resume" class="btn primary">Riprendi</button>
-      <button id="restart" class="btn">Ricomincia</button>
-      <button id="stop" class="btn">Termina la gara</button>
+      <button id="restart" class="btn" data-ippo="Rifacciamolo">Ricomincia</button>
+      <button id="stop" class="btn" data-ippo="Basta, sono distrutto">Termina la gara</button>
     </div>
     <div class="row">
-      <button id="sit-paused" class="btn primary" hidden>Siediti</button>
+      <button id="sit-paused" class="btn primary" hidden data-ippo="Mi unisco all’ammucchiata">Siediti</button>
       <button id="leave" class="btn" hidden>Alzati</button>
     </div>
     <p class="hint">Durante la pausa si può salire o scendere dalla zattera. Si riparte con tre secondi di conto alla rovescia.</p>
   </section>
 
   <section id="results" class="card" hidden>
-    <h2>Arrivati</h2>
+    <h2 data-ippo="Siete venuti tutti.">Arrivati</h2>
     <p class="big-time" id="final-time"></p>
     <p id="final-stats"></p>
     <h3 id="best-title">Migliori tempi della stanza</h3>
     <ol id="best"></ol>
     <div id="maps-results" class="maps" aria-label="Mappa"></div>
+    <button id="ippo-results" class="btn ippo-switch" aria-pressed="false">Ippompieri (VM18)</button>
     <div class="row">
       <button id="again" class="btn primary">Un altro giro</button>
-      <button id="sit-results" class="btn" hidden>Siediti</button>
+      <button id="sit-results" class="btn" hidden data-ippo="Mi unisco all’ammucchiata">Siediti</button>
     </div>
+  </section>
+
+  <section id="ippo-notice" class="card" hidden>
+    <p>Contiene scene di spinta esplicita tra adulti consenzienti.</p>
+    <button id="ippo-ok" class="btn primary">Ho 18 anni e acconsento</button>
   </section>
 
   <section id="denied" class="card" hidden>
@@ -87,7 +96,7 @@
 
   <div id="touch" hidden>
     <button data-k="left" aria-label="Gira a sinistra">⟲</button>
-    <button data-k="fart" class="fart" aria-label="Spingi">💨</button>
+    <button data-k="fart" class="fart" aria-label="Spingi" data-ippo="🧯">💨</button>
     <button data-k="right" aria-label="Gira a destra">⟳</button>
   </div>
 

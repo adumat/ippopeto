@@ -65,6 +65,7 @@
     biter: 'rat',
     causes: { rat: ['morso di ratto', 'morsi di ratto'] },
     hint: 'I tubi gocciolano prima di sparare, le bocchette vi risucchiano indietro e un ratto vi riporta all’ultimo checkpoint.',
+    ippo: { causes: { rat: ['ratto con le mani lunghe', 'ratti con le mani lunghe'] } },
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = def;

@@ -148,6 +148,9 @@ function onConnection(ws, room) {
       case 'map':
         room.setMap(client, String(msg.id || ''));
         break;
+      case 'mode':
+        room.setMode(client, msg.on === true);
+        break;
       case 'debug':
         if (DEBUG && client.seat != null && msg.op === 'teleport') room.teleport(msg.s);
         if (DEBUG && client.seat != null && msg.op === 'shart' && room.seats[msg.seat]) room.shart(room.seats[msg.seat]);

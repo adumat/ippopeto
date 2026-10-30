@@ -12,6 +12,7 @@ The game is in Italian.
 - Rocks and barrels bounce you, whirlpools drag you around, crocodiles send you back to the last checkpoint.
 - Forcing it on an almost empty tank risks a peto vestito: your tank empties, everyone's screen gets splattered, and it shows up in the results.
 - Any seated player picks the map in the lobby or on the results card. Every map has four checkpoints; each room keeps five best times per map for as long as it exists (in memory).
+- The "Ippompieri (VM18)" switch, next to the maps, restyles the whole room as a fake family-friendly reboot. Hippos push with fire hoses, every line becomes a double entendre, and a shirtless fire captain sprays the raft at every checkpoint. Any seated player flips it between races.
 
 ## Running locally
 
@@ -46,7 +47,7 @@ Each client receives about 7–8 KB/s, so a full raft of six costs about 0.4 Mbi
 
 ## Sounds
 
-The farts are real recordings: twelve clips for pushing and five for the peto vestito, in `public/sounds/`, all CC0 from Freesound and listed in [CREDITS.md](CREDITS.md). Each push chains random clips at a varied speed and pitch around the seat's own, so it never sounds the same twice. Every other sound is synthesized in the browser.
+The farts are real recordings: twelve clips for pushing and five for the peto vestito, in `public/sounds/`, all CC0 from Freesound and listed in [CREDITS.md](CREDITS.md). Each push chains random clips at a varied speed and pitch around the seat's own, so it never sounds the same twice. The Ippompieri mode swaps them for hose jets and a few voice lines from `public/sounds/ippo/`, also CC0 and listed in the credits. Every other sound is synthesized in the browser.
 
 ## Image
 

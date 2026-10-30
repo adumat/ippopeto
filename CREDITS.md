@@ -23,3 +23,20 @@ CC0 asks for no attribution. This list keeps the provenance auditable and thanks
 | `vestito-03.mp3` | [Farts](https://freesound.org/people/michorvath/sounds/414764/) | michorvath | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `vestito-04.mp3` | [Farts](https://freesound.org/people/michorvath/sounds/414764/) | michorvath | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `vestito-05.mp3` | [fart,bum,trumpet,poop.wav](https://freesound.org/people/sorce/sounds/431621/) | sorce | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+
+The Ippompieri mode's sounds in `public/sounds/ippo/` come from Freesound too, all CC0 1.0 and checked file by file. They are cut, faded and loudness-normalized the same way.
+
+| File | Original | Author | Licence |
+|---|---|---|---|
+| `ippo/getto-01.mp3` | [F6_hose.mp3](https://freesound.org/people/Iamgiorgio/sounds/371715/) | Iamgiorgio | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/getto-02.mp3` | [Water hose](https://freesound.org/people/Richard1052/sounds/585769/) | Richard1052 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/getto-03.mp3` | [water_hose](https://freesound.org/people/KenneysGarage/sounds/754321/) | KenneysGarage | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/ohsi-01.mp3` | [Oh Yeah 1](https://freesound.org/people/unfa/sounds/155890/) | unfa | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/ohsi-02.mp3` | [Oh yeah!](https://freesound.org/people/pbrechler/sounds/250097/) | pbrechler | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/ohsi-03.mp3` | [Oh Yeah.wav](https://freesound.org/people/AIM2XL/sounds/505521/) | AIM2XL | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/schizzo-01.mp3` | [squirt.wav](https://freesound.org/people/freakinbehemoth/sounds/238864/) | freakinbehemoth | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/schizzo-02.mp3` | [Water Squirt](https://freesound.org/people/qubodup/sounds/737235/) | qubodup | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/schiaffo-01.mp3` | [Slap - Cartoony](https://freesound.org/people/AdminMP/sounds/383201/) | AdminMP | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/schiaffo-02.mp3` | [Slap.wav](https://freesound.org/people/MootMcnoodles/sounds/444407/) | MootMcnoodles | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/gemito-01.mp3` | [ahh.wav](https://freesound.org/people/filmbetrachterin/sounds/414227/) | filmbetrachterin | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/gemito-02.mp3` | [Oh! (Male)](https://freesound.org/people/DrFortyseven/sounds/436108/) | DrFortyseven | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |

@@ -15,6 +15,8 @@
   const WOOD = '#9c6b3d', WOOD_DARK = '#83572f', GAS = '#c6dc5a', PAPER = '#fff8e1';
   // a fart set alight over a lava vent
   const FIRE = ['#fff3b0', '#ffd23f', '#ff9f1c', '#ef4b3f'];
+  // Ippompieri mode: the hose jet and the peto vestito's foam replace gas and brown
+  const FOAM = '#ffffff', FOAM_LIGHT = '#dff3fb', HELMET = '#c0392b', HELMET_DARK = '#8e2a20';
   const $ = (id) => document.getElementById(id);
   const canvas = $('game');
   const ctx = canvas.getContext('2d');
@@ -120,6 +122,7 @@
       if (snaps.length > 40) snaps.shift();
       latest = m;
       if (m.mp) useCourse(m.mp, m.sd || 0);
+      setIppo(!!m.ip);
       for (const ev of m.ev) onEvent(ev);
       onSnapshot(m);
     }
@@ -177,6 +180,41 @@
     b.addEventListener('pointerleave', off);
   }
 
+  // ---------- Ippompieri mode ----------
+  // Room-wide: elements with data-ippo swap their text, body.ippo shows the mode's extras.
+  let ippo = false, ippoNoticeSeen = false;
+  const say = (base, alt) => (ippo ? alt : base);
+  function setIppo(on) {
+    if (on === ippo) return;
+    ippo = on;
+    document.body.classList.toggle('ippo', ippo);
+    document.title = ippo ? 'Ippompieri' : 'Ippopeto';
+    for (const el of document.querySelectorAll('[data-ippo]')) {
+      if (el.dataset.base == null) el.dataset.base = el.textContent;
+      el.textContent = ippo ? el.dataset.ippo : el.dataset.base;
+    }
+    for (const id of ['ippo', 'ippo-results']) $(id).setAttribute('aria-pressed', String(ippo));
+    $('map-hint').textContent = mapHint();
+    if (ippo) {
+      showIppoNotice();
+      loadIppoClips();
+    } else {
+      $('ippo-notice').hidden = true;
+    }
+  }
+  // once per page load, and only after the player has joined
+  function showIppoNotice() {
+    if (ippoNoticeSeen || !ippo || view === 'splash') return;
+    ippoNoticeSeen = true;
+    $('ippo-notice').hidden = false;
+  }
+  $('ippo-ok').addEventListener('click', () => { $('ippo-notice').hidden = true; });
+  for (const id of ['ippo', 'ippo-results']) {
+    $(id).addEventListener('click', (e) => { send({ t: 'mode', on: !ippo }); e.currentTarget.blur(); });
+  }
+  const mapHint = () => (ippo && course.def.ippo && course.def.ippo.hint) || course.def.hint || '';
+  const mapCause = (k) => (ippo && course.def.ippo && course.def.ippo.causes && course.def.ippo.causes[k]) || course.def.causes[k];
+
   // ---------- UI ----------
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -218,7 +256,7 @@
         box.appendChild(b);
       }
     }
-    $('map-hint').textContent = course.def.hint || '';
+    $('map-hint').textContent = mapHint();
   }
   $('pause').addEventListener('click', (e) => { send({ t: 'pause' }); e.currentTarget.blur(); });
   for (const t of ['resume', 'restart', 'stop']) $(t).addEventListener('click', (e) => { send({ t }); e.currentTarget.blur(); });
@@ -271,7 +309,7 @@
       const el = document.createElement('div');
       el.className = 'seat empty';
       el.style.borderColor = INK;
-      el.innerHTML = `<span class="name"></span><span class="status">torna subito</span><div class="bar"><div class="fill"></div></div>`;
+      el.innerHTML = `<span class="name"></span><span class="status">torna subito</span><div class="bar"><div class="fill"></div></div><span class="tank">Serbatoio</span>`;
       el.querySelector('.name').style.color = INK;
       $('seats').appendChild(el);
       return el;
@@ -316,6 +354,8 @@
     $('lobby').hidden = view !== 'lobby';
     $('results').hidden = view !== 'results';
     $('paused').hidden = view !== 'paused';
+    document.body.classList.toggle('in-race', view === 'race' || view === 'paused');
+    showIppoNotice();
   }
 
   let crewSig = '';
@@ -370,6 +410,10 @@
       seatEls[i].classList.toggle('tired', !!s[5]);
     });
     renderMaps(course.id, seated);
+    for (const id of ['ippo', 'ippo-results']) {
+      $(id).disabled = !seated;
+      $(id).title = seated ? '' : 'Solo chi è seduto cambia la modalità';
+    }
     const canSit = joined && !wantSeat && !seated && !racing(m.st) && m.s.filter(Boolean).length < T.MAX_SEATS;
     $('sit').hidden = !canSit;
     $('sit-results').hidden = !canSit;
@@ -391,7 +435,7 @@
         blip(880, 0.3, 'sine', 0.25);
         break;
       case 'cp':
-        toast(`Checkpoint ${ev.i + 1} di ${course.CHECKPOINTS.length}`);
+        toast(`${say('Checkpoint', 'Spintarella')} ${ev.i + 1} di ${course.CHECKPOINTS.length}`);
         blip(660, 0.12, 'sine', 0.2);
         setTimeout(() => blip(990, 0.18, 'sine', 0.2), 110);
         break;
@@ -403,15 +447,16 @@
       case 'shart': {
         const seat = latest && latest.s[ev.i];
         if (!seat) break;
-        toast(`${seat[1]} se l’è fatta addosso`, 2600);
+        toast(say(`${seat[1]} se l’è fatta addosso`, `${seat[1]} è venuto troppo presto.`), 2600);
         stains.set(seat[0], performance.now() + 10000);
-        spawnSplats();
+        if (ippo) spawnSplats(FOAM, FOAM_LIGHT);
+        else spawnSplats();
         playVestito(seat[7]);
         shake = Math.max(shake, 12);
         break;
       }
       case 'jet':
-        toast('Che schifo! Il tubo vi ha centrati', 2200);
+        toast(say('Che schifo! Il tubo vi ha centrati', 'Il tubo vi è venuto addosso.'), 2200);
         spawnSplats(SLIME, SLIME_LIGHT);
         thud(1);
         shake = Math.max(shake, 16);
@@ -433,11 +478,12 @@
         toast('Liberi!', 1400);
         break;
       case 'fall':
-        toast('Splash! Il ghiaccio ha ceduto: si torna all’ultimo checkpoint', 2400);
+        toast(say('Splash! Il ghiaccio ha ceduto: si torna all’ultimo checkpoint', 'Rotto il ghiaccio: ora fate amicizia.'), 2400);
         thud(1);
         shake = 18;
         break;
       case 'fire':
+        if (ippo) toast('Ce l’hai di fuoco!', 1400);
         blip(140, 0.3, 'sawtooth', 0.15);
         break;
       case 'geyser':
@@ -446,12 +492,12 @@
         shake = Math.max(shake, 14);
         break;
       case 'bomb':
-        toast('Bum! Una bomba di lava: si torna all’ultimo checkpoint', 2400);
+        toast(say('Bum! Una bomba di lava: si torna all’ultimo checkpoint', 'Vampata! Qualcuno è in menopausa?'), 2400);
         thud(1);
         shake = 22;
         break;
       case 'void':
-        toast('Caduti nel vuoto! Si torna all’ultimo checkpoint', 2400);
+        toast(say('Caduti nel vuoto! Si torna all’ultimo checkpoint', 'Oops, è uscito.'), 2400);
         fallFx = { x: ev.x, y: ev.y, a: ev.a, t: performance.now() / 1000 };
         blip(520, 0.5, 'sine', 0.2);
         break;
@@ -459,24 +505,31 @@
         blip(660, 0.25, 'triangle', 0.2);
         break;
       case 'turbo':
+        if (ippo) toast('Più a fondo!', 1200);
         blip(880, 0.15, 'square', 0.12);
         break;
       case 'bats':
-        toast('Pipistrelli!', 1600);
+        toast(say('Pipistrelli!', 'Vi sono saltati addosso.'), 1600);
         blindUntil = performance.now() / 1000 + 2;
         thud(0.5);
         break;
       case 'bear':
-        blip(196, 0.25, 'sawtooth', 0.18);
+        if (ippo) biteVoice();
+        else blip(196, 0.25, 'sawtooth', 0.18);
         break;
       case 'bite':
-        toast('Gnam! Si torna all’ultimo checkpoint', 2200);
-        chomp();
+        toast(say('Gnam! Si torna all’ultimo checkpoint', 'Il coccodrillo vi ha presi da dietro.'), 2200);
+        if (ippo) biteVoice();
+        else chomp();
         shake = 18;
         break;
       case 'bump':
         thud(ev.m);
         shake = Math.max(shake, 10 * ev.m);
+        break;
+      case 'spray':
+        sprayUntil = performance.now() / 1000 + ev.d;
+        if (ippo) playIppo('getto', 1.3);
         break;
       case 'finish':
         best = ev.best;
@@ -490,13 +543,16 @@
   function showResults(ev) {
     $('final-time').textContent = fmt(ev.time);
     // every cause the map has, zero included, worded by the map
-    const backs = Object.entries(course.def.causes || {}).map(([k, [one, many]]) => {
+    const backs = Object.keys(course.def.causes || {}).map((k) => {
+      const [one, many] = mapCause(k);
       const n = (ev.backs || {})[k] || 0;
       return n === 1 ? `1 ${one}` : `${n} ${many}`;
     });
-    const vestiti = ev.sharts === 1 ? '1 peto vestito' : `${ev.sharts || 0} peti vestiti`;
+    const vestiti = ippo
+      ? (ev.sharts === 1 ? '1 schizzo fuori programma' : `${ev.sharts || 0} schizzi fuori programma`)
+      : (ev.sharts === 1 ? '1 peto vestito' : `${ev.sharts || 0} peti vestiti`);
     $('final-stats').textContent = `${[...backs, vestiti].join(', ')}, ${ev.sync}% del tempo a spingere tutti insieme.`;
-    $('best-title').textContent = `Migliori tempi: ${course.def.name}`;
+    $('best-title').textContent = `${say('Migliori tempi', 'Le sveltine migliori')}: ${course.def.name}`;
     const ol = $('best');
     ol.innerHTML = '';
     for (const b of best) {
@@ -542,6 +598,7 @@
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     loadClips(FART_CLIPS).then((b) => { fartBufs = b; });
     loadClips(VESTITO_CLIPS).then((b) => { vestitoBufs = b; });
+    loadIppoClips();
   }
 
   // iOS keeps Web Audio silent behind the mute switch and only unlocks it on a
@@ -660,8 +717,35 @@
     src.start(Math.max(at, audio.currentTime));
     return src;
   }
+  // Ippompieri mode: recorded voices, fetched only once the mode is on
+  const IPPO_CLIPS = { getto: 3, ohsi: 3, ops: 0, schizzo: 2, schiaffo: 2, gemito: 2 };
+  const ippoBufs = {};
+  let ippoLoading = false;
+  function loadIppoClips() {
+    if (!audio || !ippo || ippoLoading) return;
+    ippoLoading = true;
+    for (const [name, n] of Object.entries(IPPO_CLIPS)) {
+      const urls = Array.from({ length: n }, (_, i) => `sounds/ippo/${name}-${String(i + 1).padStart(2, '0')}.mp3`);
+      loadClips(urls).then((b) => { ippoBufs[name] = b; });
+    }
+  }
+  function playIppo(name, rate = 1, at = 0) {
+    const bufs = ippoBufs[name];
+    if (!audio || !bufs || !bufs.length) return null;
+    return playClip(pick(bufs), rate * (0.94 + Math.random() * 0.12), at, master);
+  }
+  // a bite: a slap with a floating "Maleducato!", or a surprised moan
+  function biteVoice() {
+    if (Math.random() < 0.5) {
+      playIppo('schiaffo');
+      floatWord('Maleducato!');
+    } else {
+      playIppo('gemito');
+    }
+  }
   function startFart(id, colour) {
-    if (!audio || voices.has(id) || !fartBufs.length) return;
+    const bank = ippo ? ippoBufs.getto : fartBufs;
+    if (!audio || voices.has(id) || !bank || !bank.length) return;
     const bus = audio.createGain();
     bus.connect(master);
     const v = { bus, sources: [], timer: null, live: true };
@@ -670,7 +754,7 @@
     const next = () => {
       if (!v.live) return;
       const rate = (SEAT_RATE[colour] || 1) * (0.88 + Math.random() * 0.24);
-      const src = playClip(pick(fartBufs), rate, at, bus);
+      const src = playClip(pick(bank), rate, at, bus);
       v.sources.push(src);
       if (v.sources.length > 4) v.sources.shift();
       at = Math.max(at, audio.currentTime) + src.buffer.duration / rate - 0.03;
@@ -693,10 +777,22 @@
     setTimeout(() => v.bus.disconnect(), 250);
   }
   function playVestito(colour) {
+    if (ippo) {
+      const ops = playIppo('ops');
+      playIppo('schizzo', 1, audio ? audio.currentTime + (ops ? ops.buffer.duration : 0) : 0);
+      return;
+    }
     if (!audio || !vestitoBufs.length) return;
     playClip(pick(vestitoBufs), (SEAT_RATE[colour] || 1) * (0.9 + Math.random() * 0.2), 0, master);
   }
+  let wasSync = false;
   function updateVoices(m) {
+    // the chorus: a few "oh sì" stacked at different pitches when the whole crew pushes together
+    const sync = !!m.sy && m.st === 'running';
+    if (ippo && sync && !wasSync) {
+      for (let i = 0; i < 3; i++) playIppo('ohsi', 0.85 + i * 0.15, audio ? audio.currentTime + i * 0.07 : 0);
+    }
+    wasSync = sync;
     const pushing = new Set();
     for (const s of m.s) {
       if (s && s[4]) {
@@ -727,6 +823,28 @@
   };
   let shake = 0;
   let blindUntil = 0; // a bat swarm covers the view until then
+  let sprayUntil = 0; // the fire captain sprays until then
+  const words = []; // floating words over the HUD, e.g. "Maleducato!"
+  function floatWord(text) {
+    words.push({ text, born: performance.now() / 1000 });
+  }
+  function drawWords() {
+    const now = performance.now() / 1000;
+    for (let i = words.length - 1; i >= 0; i--) if (now - words[i].born > 1.4) words.splice(i, 1);
+    ctx.font = `400 ${Math.min(cw, ch) * 0.09}px "Bagel Fat One", system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 6;
+    for (const w of words) {
+      const t = (now - w.born) / 1.4;
+      ctx.globalAlpha = 1 - t * t;
+      ctx.strokeStyle = INK;
+      ctx.fillStyle = PAPER;
+      const y = ch * 0.4 - (reducedMotion ? 0 : t * ch * 0.08);
+      ctx.strokeText(w.text, cw / 2, y);
+      ctx.fillText(w.text, cw / 2, y);
+    }
+    ctx.globalAlpha = 1;
+  }
   const particles = [];
   let lastFrame = performance.now() / 1000;
   const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -911,22 +1029,42 @@
       const wx = raft.x + bx * cos - by * sin, wy = raft.y + bx * sin + by * cos;
       const dx = Math.cos(s.aim + raft.a), dy = Math.sin(s.aim + raft.a);
       for (let n = 0; n < 2; n++) {
-        const sp = 90 + Math.random() * 90;
+        // the hose: a faster, narrower, white jet; a fart: a slow green cloud
+        const sp = ippo ? 200 + Math.random() * 120 : 90 + Math.random() * 90;
+        const spread = ippo ? 16 : 50;
         particles.push({
           x: wx, y: wy,
-          vx: dx * sp + (Math.random() - 0.5) * 50,
-          vy: dy * sp + (Math.random() - 0.5) * 50,
-          age: 0, life: 0.8 + Math.random() * 0.5,
-          tint: s.fire ? FIRE[Math.floor(Math.random() * FIRE.length)] : Math.random() < 0.5 ? GAS : '#a9bd47',
+          vx: dx * sp + (Math.random() - 0.5) * spread,
+          vy: dy * sp + (Math.random() - 0.5) * spread,
+          age: 0, life: ippo ? 0.5 + Math.random() * 0.3 : 0.8 + Math.random() * 0.5,
+          size: ippo ? 0.5 : 1,
+          tint: s.fire ? FIRE[Math.floor(Math.random() * FIRE.length)] : ippo ? (Math.random() < 0.5 ? FOAM : FOAM_LIGHT) : Math.random() < 0.5 ? GAS : '#a9bd47',
         });
       }
     });
+    // the fire captain's hose, sprayed every which way from the middle of the raft
+    const spraying = ippo && performance.now() / 1000 < sprayUntil;
+    const captainAim = spraying ? captainSprayAim() : Math.PI / 2;
+    if (spraying) {
+      const da = captainAim + raft.a;
+      const hx = raft.x - Math.cos(da) * 30, hy = raft.y - Math.sin(da) * 30;
+      for (let n = 0; n < 3; n++) {
+        const sp = 260 + Math.random() * 160;
+        particles.push({
+          x: hx, y: hy,
+          vx: -Math.cos(da) * sp + (Math.random() - 0.5) * 30,
+          vy: -Math.sin(da) * sp + (Math.random() - 0.5) * 30,
+          age: 0, life: 0.5 + Math.random() * 0.3, size: 0.5,
+          tint: Math.random() < 0.5 ? FOAM : FOAM_LIGHT,
+        });
+      }
+    }
     while (particles.length > 700) particles.shift();
 
     if (course.def.vehicle === 'sled') drawGrooves(raft);
     else grooves.length = 0;
     drawFall();
-    drawRaft(raft, seats);
+    drawRaft(raft, seats, ippo ? captainAim : null);
 
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -940,7 +1078,7 @@
       ctx.globalAlpha = (1 - q) * 0.6;
       ctx.fillStyle = p.tint;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 8 + q * 26, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, (8 + q * 26) * (p.size || 1), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -964,6 +1102,7 @@
     // on-screen HUD
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawSplats();
+    drawWords();
     if (st === 'countdown' && latest) {
       const n = Math.ceil(latest.tm);
       if (n !== lastCountBeep) {
@@ -993,7 +1132,13 @@
     requestAnimationFrame(frame);
   }
 
-  function drawRaft(raft, seats) {
+  // the captain whips round erratically while he sprays; his rear points along the returned angle
+  function captainSprayAim() {
+    const t = performance.now() / 1000;
+    return Math.PI / 2 + Math.sin(t * 7.3) * 2.2 + Math.sin(t * 17.1) * 0.9;
+  }
+
+  function drawRaft(raft, seats, captainAim) {
     const S = T.RAFT_SIZE, h = S / 2;
     const ufo = course.def.vehicle === 'ufo';
     const z = raft.z || 0;
@@ -1037,8 +1182,83 @@
       }
       ctx.restore();
     });
+    if (captainAim != null) {
+      ctx.save();
+      drawCaptain(captainAim);
+      ctx.restore();
+    }
     if (ufo) drawDome(h);
     ctx.restore();
+  }
+
+  // Ippompieri: the shirtless fire captain in braces, holding his hose out in front
+  function drawCaptain(aim) {
+    ctx.rotate(aim + Math.PI);
+    ctx.scale(0.8, 0.8);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3.5;
+    // the hose, from his snout outwards
+    ctx.strokeStyle = '#3d4a52';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(30, 10);
+    ctx.quadraticCurveTo(46, 14, 58, 0);
+    ctx.stroke();
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3.5;
+    ctx.fillStyle = '#f1a99b';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 30, 23, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // braces over the bare back
+    ctx.strokeStyle = HELMET;
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'butt';
+    for (const y of [-9, 9]) {
+      ctx.beginPath();
+      ctx.moveTo(-28, y * 0.6);
+      ctx.lineTo(24, y);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3.5;
+    ctx.fillStyle = '#f1a99b';
+    for (const y of [-11, 11]) {
+      ctx.beginPath();
+      ctx.arc(19, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.ellipse(28, 0, 15, 15, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    drawHelmet(28);
+  }
+
+  // a firefighter's helmet seen from above, on the back of the head at `x` so the eyes
+  // and snout stay visible: a long rear brim, the dome, a gold badge on its front
+  function drawHelmet(x) {
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+    ctx.fillStyle = HELMET_DARK;
+    ctx.beginPath();
+    ctx.ellipse(x - 13, 0, 12, 15, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = HELMET;
+    ctx.beginPath();
+    ctx.ellipse(x - 7, 0, 9, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffd23f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x + 1, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
   }
 
   // the Stelle's flying saucer: a disc with blinking lights round the rim, a glass dome on top
@@ -1260,7 +1480,7 @@
     ctx.fill();
     ctx.stroke();
     if (s.stained) {
-      ctx.fillStyle = BROWN;
+      ctx.fillStyle = ippo ? FOAM : BROWN;
       for (const [x, y, rx, ry] of [[-17, 3, 10, 8], [-22, -6, 6, 5]]) {
         ctx.beginPath();
         ctx.ellipse(x, y, rx, ry, 0.3, 0, Math.PI * 2);
@@ -1279,6 +1499,7 @@
     ctx.ellipse(26, 0, 15, 15, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    if (ippo) drawHelmet(26);
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.beginPath();
     ctx.ellipse(37, 0, 9, 13, 0, 0, Math.PI * 2);

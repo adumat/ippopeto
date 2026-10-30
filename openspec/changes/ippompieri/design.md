@@ -14,14 +14,16 @@ Copy is spread across three places: `public/index.html` holds the static labels,
   - the jet reuses the particle system with a white palette and a narrower spread;
   - the splats reuse `spawnSplats` with white foam colours.
   The brown-only rule stays true, because brown is simply not used in the mode.
-- **Captain.** He is drawn by the client at the raft centre and does not exist in `seats`. On a checkpoint with the mode on, the server starts a 3 s spray. Every 0.25 s it applies a random impulse of 25–35 % of one hippo's push, from a room-seeded RNG. The server emits `spray{d:3}` so clients animate him.
-  - To be tuned with the sim on the 2-bot crew: the shoves must never cause a send-back on their own.
+- **Captain.** He is drawn by the client at the raft centre and does not exist in `seats`. On a checkpoint with the mode on, the server starts a 3 s spray. Every 0.25 s it turns a held shove of 15 % of one hippo's push to a new direction. The direction comes from a hash of the layout seed, the checkpoint and the step, so it never consumes the room's dice. The server emits `spray{d:3}` so clients animate him.
+  - Tuned with the sim over 10 seeds per map. With 4 bots the failures stay at 0 in 60 runs and the send-backs go from 3.2 to 3.5. With 2 bots, failures go from 5 to 7 in 60 runs and send-backs from 4.9 to 5.9. Those 2-bot runs are already chaotic: any perturbation moves a borderline run either way.
 - **Notice.** A card overlay in `index.html`, shown once per page load on the first snapshot with `ip:1`. It is client-only.
 - **Sounds.**
-  - Hose jet: synthesized filtered noise bursts, like the existing `thud`/noise buffer, with no new asset needed.
-  - Voice lines ("oh sì" chorus, "ops", the moan, the slap): short recordings under `public/sounds/ippo/`, loaded only when the mode turns on.
+  - All of them are CC0 recordings from Freesound, picked by the owner in an artifact. They live under `public/sounds/ippo/` and load only once the mode is on.
+  - The hose jet replaces the fart clips in the same chained-voice player.
+  - The chorus is three "oh sì" clips stacked at different pitches.
+  - "ops" is still being chosen. Until a clip exists, the peto vestito plays only the splash.
 
 ## Risks
 
-- **Voice lines need recordings.** CC0 sources for moans and an Italian "oh sì" chorus are unlikely. The fallback is that the owner records them, as with the fart voices.
+- **The voices are English** ("oh yeah", "oh!"): no Italian CC0 recordings were found.
 - **Captain vs. the 2-bot crew.** Random shoves after a checkpoint are exactly the "hazard right after a checkpoint" pattern that causes send-back loops. Keep them below that threshold, verified on 5+ seeds per map.

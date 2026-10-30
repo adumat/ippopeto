@@ -55,6 +55,10 @@
     causes: { croc: ['morso di coccodrillo', 'morsi di coccodrillo'] },
     // the lobby's last hint, after the sync tip
     hint: 'Un morso di coccodrillo vi riporta all’ultimo checkpoint. Intanto potete provare: la zattera è già in acqua.',
+    ippo: {
+      causes: { croc: ['sorpresa da dietro', 'sorprese da dietro'] },
+      hint: 'Se il coccodrillo vi prende da dietro, si torna all’ultimo checkpoint. Intanto potete provare: la zattera è già in acqua.',
+    },
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = def;
