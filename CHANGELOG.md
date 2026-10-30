@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/adumat/ippopeto/compare/v0.8.0...v0.9.0) (2026-10-30)
+
+
+### Features
+
+* add the Ippompieri mode, a room-wide VM18 restyle with hoses and a fire captain ([47cbbb3](https://github.com/adumat/ippopeto/commit/47cbbb3eaacce3d044ecc144f1bf627600229b8c))
+* draw the Ippompieri as upright chibi firefighters with water guns and a lance-wielding captain ([f4bd777](https://github.com/adumat/ippopeto/commit/f4bd7771ca91f1a7b7175fd6d555c15cc45203a1))
+* give the Ippompieri peto vestito its oops ([d9a2578](https://github.com/adumat/ippopeto/commit/d9a257810395d77d77dcf3c8bd2f0799d53be533))
+
+
+### Bug Fixes
+
+* **fogne:** make the jets throw and spin the raft, with fewer pipes firing less often ([f81d479](https://github.com/adumat/ippopeto/commit/f81d479f2931c1af3512f6eedeab2f03b67f3411))
+
 ## [0.8.0](https://github.com/adumat/ippopeto/compare/v0.7.0...v0.8.0) (2026-10-28)
 
 
