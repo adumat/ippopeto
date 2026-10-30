@@ -71,28 +71,31 @@ Every cause SHALL have a plural form, as the originals do. Map hints SHALL swap 
 
 ### Requirement: The look
 
-With the mode on:
-- every hippo SHALL wear a red firefighter helmet;
-- the gas particles SHALL become a white hose jet from the hippo's rear, in the same direction and with the same cap;
+With the mode on, the hippos SHALL give way to firefighters with a hippo's head, drawn chibi-style and standing upright on their seats, facing the camera:
+- every firefighter SHALL be bare-chested, muscular and oiled, with a tuft of chest hair, firefighter trousers, boots, a red helmet with a gold shield, and braces in the player's colour;
+- each SHALL hold a pump-action water gun in the player's colour at crotch height, pointing outward and a little up, and SHALL turn so the gun sits on the side of the push;
+- the jet SHALL be white and SHALL leave from the gun's tip, in the push direction;
+- figures SHALL stay upright while the vehicle turns, and nearer ones (lower on screen) SHALL be drawn in front;
+- the player's own firefighter SHALL have a halo at the feet and a dashed arrow along the push;
 - the touch push button SHALL show 🧯;
 - during the race, a round red "VM18 consensuale" sticker SHALL sit in a corner without covering the HUD;
-- the peto vestito splats and the culprit's stain SHALL be white foam instead of brown.
+- the peto vestito splats SHALL be white foam instead of brown, and the culprit SHALL wear foam on the chest.
 
 #### Scenario: Pushing
-- **WHEN** a hippo pushes with the mode on
-- **THEN** a white jet comes out of its rear where the gas cloud used to be
+- **WHEN** a player pushes with the mode on
+- **THEN** their firefighter turns toward the push and a white jet leaves the gun's tip
 
 ### Requirement: The fire captain
 
-With the mode on, a shirtless fire captain in braces SHALL stand in the middle of the raft. He SHALL take no seat and never push. Every time the raft passes a checkpoint, he SHALL spray his hose wildly for about three seconds. While he sprays, the raft SHALL get small random shoves that every screen sees alike, weak enough for the crew to hold its course.
+With the mode on, a fire captain SHALL stand in the middle of the vehicle, larger than the crew, with a moustache, red braces and a C on his helmet's shield. Instead of a water gun he SHALL hold a long brass lance coming out of his trousers' fly. He SHALL take no seat and never push. Every time the vehicle passes a checkpoint, he SHALL spray wildly for about three seconds. While he sprays, the vehicle SHALL get small random shoves that every screen sees alike, weak enough for the crew to hold its course.
 
 #### Scenario: Checkpoint
-- **WHEN** the raft passes a checkpoint with the mode on
-- **THEN** the captain sprays at random for about three seconds and the raft wobbles
+- **WHEN** the vehicle passes a checkpoint with the mode on
+- **THEN** the captain sprays at random for about three seconds and the vehicle wobbles
 
 #### Scenario: Mode off
 - **WHEN** the mode is off
-- **THEN** there is no captain and checkpoints do not move the raft
+- **THEN** there is no captain and checkpoints do not move the vehicle
 
 ### Requirement: Sounds in the mode
 

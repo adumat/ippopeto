@@ -16,7 +16,7 @@
   // a fart set alight over a lava vent
   const FIRE = ['#fff3b0', '#ffd23f', '#ff9f1c', '#ef4b3f'];
   // Ippompieri mode: the hose jet and the peto vestito's foam replace gas and brown
-  const FOAM = '#ffffff', FOAM_LIGHT = '#dff3fb', HELMET = '#c0392b', HELMET_DARK = '#8e2a20';
+  const FOAM = '#ffffff', FOAM_LIGHT = '#dff3fb';
   const $ = (id) => document.getElementById(id);
   const canvas = $('game');
   const ctx = canvas.getContext('2d');
@@ -1022,14 +1022,23 @@
     // gas particles: spawned below the raft, drawn above it
     const cos = Math.cos(raft.a), sin = Math.sin(raft.a);
     const seatPos = T.seatPositions(seats.length);
+    // Ippompieri: firefighters stand upright on their seats, the tool toward the push
+    const firefighters = ippo ? standingCrew(raft, seats, seatPos) : [];
+    const spraying = ippo && performance.now() / 1000 < sprayUntil;
     seats.forEach((s, i) => {
       if (!s || !s.farting) return;
-      const [lx, ly] = seatPos[i];
-      const bx = lx + Math.cos(s.aim) * 22, by = ly + Math.sin(s.aim) * 22;
-      const wx = raft.x + bx * cos - by * sin, wy = raft.y + bx * sin + by * cos;
       const dx = Math.cos(s.aim + raft.a), dy = Math.sin(s.aim + raft.a);
+      let wx, wy;
+      if (ippo) {
+        [wx, wy] = firefighters.find((f) => f.seat === i).tip;
+      } else {
+        const [lx, ly] = seatPos[i];
+        const bx = lx + Math.cos(s.aim) * 22, by = ly + Math.sin(s.aim) * 22;
+        wx = raft.x + bx * cos - by * sin;
+        wy = raft.y + bx * sin + by * cos;
+      }
       for (let n = 0; n < 2; n++) {
-        // the hose: a faster, narrower, white jet; a fart: a slow green cloud
+        // the water gun: a faster, narrower, white jet; a fart: a slow green cloud
         const sp = ippo ? 200 + Math.random() * 120 : 90 + Math.random() * 90;
         const spread = ippo ? 16 : 50;
         particles.push({
@@ -1042,18 +1051,15 @@
         });
       }
     });
-    // the fire captain's hose, sprayed every which way from the middle of the raft
-    const spraying = ippo && performance.now() / 1000 < sprayUntil;
-    const captainAim = spraying ? captainSprayAim() : Math.PI / 2;
+    // the fire captain's lance, sprayed every which way from the middle of the raft
+    const captain = ippo ? standingCaptain(raft, seats.length, spraying) : null;
     if (spraying) {
-      const da = captainAim + raft.a;
-      const hx = raft.x - Math.cos(da) * 30, hy = raft.y - Math.sin(da) * 30;
       for (let n = 0; n < 3; n++) {
         const sp = 260 + Math.random() * 160;
         particles.push({
-          x: hx, y: hy,
-          vx: -Math.cos(da) * sp + (Math.random() - 0.5) * 30,
-          vy: -Math.sin(da) * sp + (Math.random() - 0.5) * 30,
+          x: captain.tip[0], y: captain.tip[1],
+          vx: Math.cos(captain.aim) * sp + (Math.random() - 0.5) * 30,
+          vy: Math.sin(captain.aim) * sp + (Math.random() - 0.5) * 30,
           age: 0, life: 0.5 + Math.random() * 0.3, size: 0.5,
           tint: Math.random() < 0.5 ? FOAM : FOAM_LIGHT,
         });
@@ -1064,7 +1070,8 @@
     if (course.def.vehicle === 'sled') drawGrooves(raft);
     else grooves.length = 0;
     drawFall();
-    drawRaft(raft, seats, ippo ? captainAim : null);
+    drawRaft(raft, ippo ? seats.map(() => null) : seats, ippo);
+    if (ippo) drawStanding(firefighters, captain, seats);
 
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -1084,19 +1091,26 @@
     ctx.globalAlpha = 1;
     if (painter.overlay) painter.overlay(ctx, world, { ...view, raft, particles, blind: Math.max(0, blindUntil - performance.now() / 1000) });
 
-    // names above the hippos
+    // names above the hippos, or above the firefighters' helmets
     ctx.font = `700 ${seats.length >= 5 ? 13 : 17}px "Atkinson Hyperlegible", system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.lineWidth = 5;
     seats.forEach((s, i) => {
       if (!s) return;
-      const [lx, ly] = seatPos[i];
-      const wx = raft.x + lx * cos - ly * sin, wy = raft.y + lx * sin + ly * cos;
+      let wx, wy;
+      if (ippo) {
+        const f = firefighters.find((x) => x.seat === i);
+        wx = f.x;
+        wy = f.y - window.IppoFirefighters.height(f.scale) + 6;
+      } else {
+        const [lx, ly] = seatPos[i];
+        wx = raft.x + lx * cos - ly * sin;
+        wy = raft.y + lx * sin + ly * cos - (seats.length >= 5 ? 26 : 34);
+      }
       ctx.strokeStyle = INK;
       ctx.fillStyle = PAPER;
-      const lift = seats.length >= 5 ? 26 : 34;
-      ctx.strokeText(s.name, wx, wy - lift);
-      ctx.fillText(s.name, wx, wy - lift);
+      ctx.strokeText(s.name, wx, wy);
+      ctx.fillText(s.name, wx, wy);
     });
 
     // on-screen HUD
@@ -1132,13 +1146,65 @@
     requestAnimationFrame(frame);
   }
 
-  // the captain whips round erratically while he sprays; his rear points along the returned angle
-  function captainSprayAim() {
+  // Ippompieri: where each firefighter stands (world coordinates, feet), which way the tool
+  // points and where its tip is. Standing figures do not turn with the raft.
+  const FF_FEET = 14;
+  function standingCrew(raft, seats, seatPos) {
+    const cos = Math.cos(raft.a), sin = Math.sin(raft.a);
+    const scale = seats.length >= 5 ? 1 : 1.3;
+    const out = [];
+    seats.forEach((s, i) => {
+      if (!s) return;
+      const [lx, ly] = seatPos[i];
+      const x = raft.x + lx * cos - ly * sin, y = raft.y + lx * sin + ly * cos + FF_FEET;
+      const aim = s.aim + raft.a;
+      const jetRight = Math.cos(aim) > 0;
+      out.push({ seat: i, s, x, y, scale, aim, jetRight, tip: window.IppoFirefighters.tipAt(x, y, scale, jetRight, 'gun') });
+    });
+    return out;
+  }
+  // the captain whips round erratically while he sprays, and rests facing right otherwise
+  function standingCaptain(raft, n, spraying) {
     const t = performance.now() / 1000;
-    return Math.PI / 2 + Math.sin(t * 7.3) * 2.2 + Math.sin(t * 17.1) * 0.9;
+    const aim = spraying ? Math.sin(t * 2.3) * 2.6 + Math.sin(t * 5.1) : 0;
+    const jetRight = Math.cos(aim) > 0;
+    const scale = n >= 5 ? 1.3 : 1.6;
+    const x = raft.x, y = raft.y + FF_FEET;
+    return { x, y, scale, aim, jetRight, tip: window.IppoFirefighters.tipAt(x, y, scale, jetRight, 'lance') };
+  }
+  function drawStanding(crew, captain, seats) {
+    const t = performance.now() / 1000;
+    const all = [...crew, { ...captain, captain: true }].sort((a, b) => a.y - b.y);
+    for (const f of all) {
+      if (f.captain) {
+        window.IppoFirefighters.draw(ctx, f.x, f.y, f.scale, f.jetRight, { col: '#c0392b', tool: 'lance', captain: true, t });
+        continue;
+      }
+      const s = f.s;
+      if (s.id === myId) {
+        // your own: a halo at the feet and a dashed arrow along the push
+        ctx.fillStyle = 'rgba(255,248,225,0.4)';
+        ctx.beginPath();
+        ctx.ellipse(f.x, f.y, 26 * f.scale, 9 * f.scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = PAPER;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([9, 7]);
+        ctx.beginPath();
+        ctx.moveTo(f.x + Math.cos(f.aim) * 30, f.y + Math.sin(f.aim) * 30);
+        ctx.lineTo(f.x + Math.cos(f.aim) * 62, f.y + Math.sin(f.aim) * 62);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.globalAlpha = s.away ? 0.3 : s.tired ? 0.65 : 1;
+      window.IppoFirefighters.draw(ctx, f.x, f.y, f.scale, f.jetRight, {
+        col: COLORS[s.colour], tool: 'gun', pumping: s.farting, stained: s.stained, tired: s.tired, t,
+      });
+      ctx.globalAlpha = 1;
+    }
   }
 
-  function drawRaft(raft, seats, captainAim) {
+  function drawRaft(raft, seats, standing) {
     const S = T.RAFT_SIZE, h = S / 2;
     const ufo = course.def.vehicle === 'ufo';
     const z = raft.z || 0;
@@ -1169,7 +1235,7 @@
       const [lx, ly] = seatPos[i];
       ctx.save();
       ctx.translate(lx, ly);
-      if (!s) {
+      if (!s && !standing) {
         ctx.setLineDash([6, 6]);
         ctx.strokeStyle = 'rgba(255,248,225,0.7)';
         ctx.lineWidth = 3;
@@ -1177,88 +1243,13 @@
         ctx.arc(0, 0, 16, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
-      } else {
+      } else if (s) {
         drawHippo(s, COLORS[s.colour], s.id === myId, crowded);
       }
       ctx.restore();
     });
-    if (captainAim != null) {
-      ctx.save();
-      drawCaptain(captainAim);
-      ctx.restore();
-    }
     if (ufo) drawDome(h);
     ctx.restore();
-  }
-
-  // Ippompieri: the shirtless fire captain in braces, holding his hose out in front
-  function drawCaptain(aim) {
-    ctx.rotate(aim + Math.PI);
-    ctx.scale(0.8, 0.8);
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3.5;
-    // the hose, from his snout outwards
-    ctx.strokeStyle = '#3d4a52';
-    ctx.lineWidth = 7;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(30, 10);
-    ctx.quadraticCurveTo(46, 14, 58, 0);
-    ctx.stroke();
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3.5;
-    ctx.fillStyle = '#f1a99b';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 30, 23, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    // braces over the bare back
-    ctx.strokeStyle = HELMET;
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'butt';
-    for (const y of [-9, 9]) {
-      ctx.beginPath();
-      ctx.moveTo(-28, y * 0.6);
-      ctx.lineTo(24, y);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3.5;
-    ctx.fillStyle = '#f1a99b';
-    for (const y of [-11, 11]) {
-      ctx.beginPath();
-      ctx.arc(19, y, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.ellipse(28, 0, 15, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    drawHelmet(28);
-  }
-
-  // a firefighter's helmet seen from above, on the back of the head at `x` so the eyes
-  // and snout stay visible: a long rear brim, the dome, a gold badge on its front
-  function drawHelmet(x) {
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3;
-    ctx.fillStyle = HELMET_DARK;
-    ctx.beginPath();
-    ctx.ellipse(x - 13, 0, 12, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = HELMET;
-    ctx.beginPath();
-    ctx.ellipse(x - 7, 0, 9, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#ffd23f';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x + 1, 0, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
   }
 
   // the Stelle's flying saucer: a disc with blinking lights round the rim, a glass dome on top
@@ -1499,7 +1490,6 @@
     ctx.ellipse(26, 0, 15, 15, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    if (ippo) drawHelmet(26);
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.beginPath();
     ctx.ellipse(37, 0, 9, 13, 0, 0, Math.PI * 2);
