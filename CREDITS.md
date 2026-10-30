@@ -24,7 +24,7 @@ CC0 asks for no attribution. This list keeps the provenance auditable and thanks
 | `vestito-04.mp3` | [Farts](https://freesound.org/people/michorvath/sounds/414764/) | michorvath | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `vestito-05.mp3` | [fart,bum,trumpet,poop.wav](https://freesound.org/people/sorce/sounds/431621/) | sorce | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
-The Ippompieri mode's sounds in `public/sounds/ippo/` come from Freesound too, all CC0 1.0 and checked file by file. They are cut, faded and loudness-normalized the same way.
+The Ippompieri mode's sounds in `public/sounds/ippo/` come from Freesound too, checked file by file. All are CC0 1.0 except the two "oops", which are CC BY 4.0 and need the attribution below. They are cut, faded and loudness-normalized the same way.
 
 | File | Original | Author | Licence |
 |---|---|---|---|
@@ -40,3 +40,5 @@ The Ippompieri mode's sounds in `public/sounds/ippo/` come from Freesound too, a
 | `ippo/schiaffo-02.mp3` | [Slap.wav](https://freesound.org/people/MootMcnoodles/sounds/444407/) | MootMcnoodles | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `ippo/gemito-01.mp3` | [ahh.wav](https://freesound.org/people/filmbetrachterin/sounds/414227/) | filmbetrachterin | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `ippo/gemito-02.mp3` | [Oh! (Male)](https://freesound.org/people/DrFortyseven/sounds/436108/) | DrFortyseven | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `ippo/ops-01.mp3` | [oops.wav](https://freesound.org/people/WIM/sounds/9020/) by WIM | WIM | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| `ippo/ops-02.mp3` | [Lexie - Oops.ogg](https://freesound.org/people/FourthWoods/sounds/439128/) by FourthWoods | FourthWoods | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |

@@ -18,10 +18,9 @@ Copy is spread across three places: `public/index.html` holds the static labels,
   - Tuned with the sim over 10 seeds per map. With 4 bots the failures stay at 0 in 60 runs and the send-backs go from 3.2 to 3.5. With 2 bots, failures go from 5 to 7 in 60 runs and send-backs from 4.9 to 5.9. Those 2-bot runs are already chaotic: any perturbation moves a borderline run either way.
 - **Notice.** A card overlay in `index.html`, shown once per page load on the first snapshot with `ip:1`. It is client-only.
 - **Sounds.**
-  - All of them are CC0 recordings from Freesound, picked by the owner in an artifact. They live under `public/sounds/ippo/` and load only once the mode is on.
+  - They are recordings from Freesound, picked by the owner in an artifact: CC0, except the two "oops", which are CC BY 4.0 and credited in `CREDITS.md`. They live under `public/sounds/ippo/` and load only once the mode is on.
   - The hose jet replaces the fart clips in the same chained-voice player.
   - The chorus is three "oh sì" clips stacked at different pitches.
-  - "ops" is still being chosen. Until a clip exists, the peto vestito plays only the splash.
 
 ## Risks
 

@@ -718,7 +718,7 @@
     return src;
   }
   // Ippompieri mode: recorded voices, fetched only once the mode is on
-  const IPPO_CLIPS = { getto: 3, ohsi: 3, ops: 0, schizzo: 2, schiaffo: 2, gemito: 2 };
+  const IPPO_CLIPS = { getto: 3, ohsi: 3, ops: 2, schizzo: 2, schiaffo: 2, gemito: 2 };
   const ippoBufs = {};
   let ippoLoading = false;
   function loadIppoClips() {
