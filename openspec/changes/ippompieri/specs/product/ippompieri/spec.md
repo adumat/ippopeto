@@ -43,7 +43,7 @@ With the mode on, these texts SHALL replace the originals. `{nome}` is the playe
 | Gas bar label | (none) | Serbatoio |
 | Sync banner | Tutti insieme! | Venite insieme! |
 | Checkpoint toast | Checkpoint {i} di {n} | Spintarella {i} di {n} |
-| Peto vestito toast | {nome} se l’è fatta addosso | Troppo presto, {nome}! |
+| Peto vestito toast | {nome} se l’è fatta addosso | {nome} è venuto troppo presto. |
 | Bite toast (Fiume) | Gnam! … | Il coccodrillo vi ha presi da dietro. |
 | Jet toast (Fogne) | Che schifo! … | Il tubo vi è venuto addosso. |
 | Thin ice toast (Fiordo) | Splash! … | Rotto il ghiaccio: ora fate amicizia. |
