@@ -1,9 +1,11 @@
 'use strict';
 // Pipes in the walls fire across the canal: a vehicle in the jet is thrown away from the
-// pipe once per firing, and every screen gets green splashes.
+// pipe and into a spin, once per firing, and every screen gets green splashes. The canal is
+// narrow, so the throw is meant to bounce it off the far wall.
 const Track = require('../../public/track.js');
 
-const KICK = 600; // px/s, about three times a typical bank bounce
+const KICK = 800; // px/s across the canal, away from the pipe
+const SPIN = 4; // rad/s, about 90° before the spin dies out
 const HALF_WIDTH = 24; // half the jet's width along the course
 
 module.exports = {
@@ -18,7 +20,7 @@ module.exports = {
       room.jetHits.set(j, st.n);
       R.vx += j.nx * KICK;
       R.vy += j.ny * KICK;
-      R.w += j.side * 1.5;
+      R.w += j.side * SPIN;
       room.events.push({ k: 'jet', x: Math.round(R.x), y: Math.round(R.y) });
     }
   },
